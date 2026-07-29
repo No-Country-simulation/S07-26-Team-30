@@ -1,0 +1,27 @@
+# Methodology
+
+The Stranded Capacity Index (SCI) is constructed using three primary data sources.
+
+## Data Sources
+
+1. **Public filings** — Annual reports and 10-K disclosures from major data center operators.
+2. **Industry surveys** — Aggregated utilization metrics from infrastructure providers.
+3. **Telemetry samples** — Anonymized GPU and CPU utilization data.
+
+## Calculation
+
+```
+SCI = (Total Provisioned Capacity - Utilized Capacity) / Total Provisioned Capacity
+```
+
+<Figure
+  src="/images/sci-formula.png"
+  alt="SCI formula breakdown"
+  caption="Figure 1: Stranded Capacity Index formula structure"
+/>
+
+## Caveats
+
+- Utilization is measured as a 90-day rolling average.
+- Provisioned capacity includes power (MW), cooling (tons), and compute (petaflops).
+- Results are normalized by operator size and geography. For definitions of key terms, see the [Taxonomy](/reports/taxonomy) section.
