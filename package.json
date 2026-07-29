@@ -1,0 +1,54 @@
+{
+  "name": "s07-26-team-30",
+  "version": "1.0.0",
+  "description": "PhysaFlow Report is a responsive web application that presents an industry reference report on stranded capacity in AI data centers. Built with Next.js and Tailwind CSS, it delivers a clean, academic-style reading experience featuring a structured taxonomy, methodology, citations, and downloadable visualizations.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write \"src/**/*.{ts,tsx,mdx,css}\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/No-Country-simulation/S07-26-Team-30.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/No-Country-simulation/S07-26-Team-30/issues"
+  },
+  "homepage": "https://github.com/No-Country-simulation/S07-26-Team-30#readme",
+  "dependencies": {
+    "@ai-sdk/groq": "^4.0.15",
+    "@ai-sdk/openai": "^4.0.23",
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@next/mdx": "^15.2.4",
+    "@types/mdx": "^2.0.14",
+    "ai": "^7.0.41",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.27.0",
+    "next": "^15.5.22",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.22",
+    "eslint-config-prettier": "^10.1.8",
+    "postcss": "^8.5.25",
+    "prettier": "^3.9.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "5.8"
+  }
+}
