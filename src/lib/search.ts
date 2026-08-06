@@ -20,7 +20,9 @@ export function keywordSearch(
   const scored = texts.map((t) => ({
     content: t.content,
     score: terms.reduce(
-      (acc, term) => acc + (t.content.toLowerCase().match(new RegExp(term, "g"))?.length ?? 0),
+      (acc, term) =>
+        acc +
+        (t.content.toLowerCase().match(new RegExp(term, "g"))?.length ?? 0),
       0,
     ),
   }));
