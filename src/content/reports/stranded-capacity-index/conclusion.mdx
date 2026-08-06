@@ -1,19 +1,74 @@
 # Conclusion
 
-The Stranded Capacity Index reveals a systematic inefficiency in AI infrastructure deployment.
+AI infrastructure growth has made data center capacity planning and utilization more complex. Physical infrastructure and hardware alone do not guarantee productive capacity; alignment between facility systems, IT infrastructure, and workload execution determines whether installed resources contribute to computational demand.
 
-## Key Findings
+The **PhysaFlow Stranded Capacity Index** organizes stranded capacity into three interconnected layers:
 
-- **Average stranded capacity across surveyed operators: 35%**
-- Primary drivers: overprovisioning (55%), scheduling fragmentation (30%), data pipeline bottlenecks (15%)
-- Potential cost recovery: $12B\u2013$18B annually across tier-1 operators
+- **Facility**, where physical infrastructure constraints limit usable compute.
+- **IT**, where infrastructure-level conditions prevent effective resource utilization.
+- **Workload**, where scheduling and operational decisions create gaps between capacity and consumption.
 
-## Recommendations
+By establishing a shared vocabulary, the taxonomy enables infrastructure teams, operators, and decision-makers to discuss capacity challenges consistently. It represents an initial foundation; future iterations may expand the framework with additional categories, operational measurements, and industry analysis.
 
-1. **Adopt dynamic workload placement** to consolidate jobs on fewer nodes.
-2. **Right-size procurement** using rolling utilization averages rather than peak projections.
-3. **Standardize reporting** of utilization metrics across the industry.
+<Chart
+  caption="Illustrative comparison of the Facility, IT, and Workload layers across the dimensions used by the taxonomy. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: { trigger: "item" },
+    legend: {
+      bottom: 0,
+      left: "center",
+      icon: "circle",
+      itemWidth: 10,
+      itemHeight: 10,
+    },
+    radar: {
+      indicator: [
+        { name: "Capacity loss share", max: 100 },
+        { name: "Operational visibility", max: 100 },
+        { name: "Cost impact", max: 100 },
+        { name: "Mitigation complexity", max: 100 },
+        { name: "Cross-team coordination", max: 100 },
+      ],
+      radius: "65%",
+      center: ["50%", "45%"],
+      axisName: { color: "#5c6259", fontSize: 12 },
+      splitArea: { areaStyle: { color: ["#faf8f2", "#f1ede3"] } },
+      splitLine: { lineStyle: { color: "#d9d5c9" } },
+      axisLine: { lineStyle: { color: "#d9d5c9" } },
+    },
+    series: [
+      {
+        type: "radar",
+        data: [
+          {
+            name: "Facility",
+            value: [60, 85, 90, 80, 70],
+            areaStyle: { color: "rgba(32, 40, 35, 0.25)" },
+            lineStyle: { color: "#202823", width: 2 },
+            itemStyle: { color: "#202823" },
+          },
+          {
+            name: "IT",
+            value: [45, 70, 75, 75, 85],
+            areaStyle: { color: "rgba(198, 161, 91, 0.25)" },
+            lineStyle: { color: "#c6a15b", width: 2 },
+            itemStyle: { color: "#c6a15b" },
+          },
+          {
+            name: "Workload",
+            value: [55, 55, 60, 60, 95],
+            areaStyle: { color: "rgba(92, 98, 89, 0.25)" },
+            lineStyle: { color: "#5c6259", width: 2 },
+            itemStyle: { color: "#5c6259" },
+          },
+        ],
+      },
+    ],
+  }}
+/>
 
-## Next Steps
-
-PhysaFlow will publish quarterly updates to the SCI. The next edition will expand coverage to include regional breakdowns and edge data centers. For a complete list of sources, see the [Citations](/reports/citations) section.
+<Blockquote>
+  The goal of the PhysaFlow Stranded Capacity Index is not only to identify
+  where capacity is lost, but to create a common language for understanding how
+  infrastructure can become disconnected from value creation.
+</Blockquote>

@@ -1,27 +1,59 @@
 # Methodology
 
-The Stranded Capacity Index (SCI) is constructed using three primary data sources.
+The **PhysaFlow Stranded Capacity Index** provides a structured framework for describing and categorizing stranded capacity across AI data centers. Rather than measuring a single operational metric, it organizes stranded capacity into three interconnected layers:
 
-## Data Sources
+- **Facility** — Physical infrastructure constraints such as power delivery and cooling.
+- **IT** — Infrastructure-level limitations affecting compute resources and their utilization.
+- **Workload** — Operational and scheduling factors influencing resource consumption.
 
-1. **Public filings** — Annual reports and 10-K disclosures from major data center operators.
-2. **Industry surveys** — Aggregated utilization metrics from infrastructure providers.
-3. **Telemetry samples** — Anonymized GPU and CPU utilization data.
+## Taxonomy Approach
 
-## Calculation
+The taxonomy follows a layered approach reflecting the relationship between physical infrastructure, computing systems, and workload execution. Each category describes what operators observe, why the condition occurs, the resulting costs, and how it widens the gap between installed and usable capacity — enabling different teams to use a shared framework.
 
-```
-SCI = (Total Provisioned Capacity - Utilized Capacity) / Total Provisioned Capacity
-```
+## Classification Principles
 
-<Figure
-  src="/images/sci-formula.png"
-  alt="SCI formula breakdown"
-  caption="Figure 1: Stranded Capacity Index formula structure"
+The classification prioritizes clarity and operational relevance, organizing entries around observable conditions rather than theoretical limitations. The framework is intended to evolve as industry understanding of stranded capacity matures.
+
+## Scope and Limitations
+
+This initial report establishes a conceptual foundation and is a reference framework, not a universal measurement standard. Examples are structured placeholders demonstrating the final report's organization; future versions may add operational measurements and industry-specific benchmarks.
+
+<Chart
+  caption="Illustrative representation of the PhysaFlow Stranded Capacity Index methodology. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+    grid: { left: 8, right: 16, top: 8, bottom: 8, containLabel: true },
+    xAxis: { type: "value", max: 100, axisLabel: { formatter: "{value}%" } },
+    yAxis: { type: "category", data: ["Workload", "IT", "Facility"] },
+    series: [
+      {
+        name: "Illustrative share",
+        type: "bar",
+        barWidth: 22,
+        data: [
+          {
+            value: 45,
+            name: "Workload",
+            itemStyle: { color: "#5c6259", borderRadius: [0, 4, 4, 0] },
+          },
+          {
+            value: 30,
+            name: "IT",
+            itemStyle: { color: "#c6a15b", borderRadius: [0, 4, 4, 0] },
+          },
+          {
+            value: 25,
+            name: "Facility",
+            itemStyle: { color: "#202823", borderRadius: [0, 4, 4, 0] },
+          },
+        ],
+      },
+    ],
+  }}
 />
 
-## Caveats
-
-- Utilization is measured as a 90-day rolling average.
-- Provisioned capacity includes power (MW), cooling (tons), and compute (petaflops).
-- Results are normalized by operator size and geography. For definitions of key terms, see the [Taxonomy](/reports/taxonomy) section.
+<Blockquote>
+  The purpose of the taxonomy is not only to describe where capacity is lost,
+  but to create a shared language for understanding why usable capacity becomes
+  disconnected from available infrastructure.
+</Blockquote>
