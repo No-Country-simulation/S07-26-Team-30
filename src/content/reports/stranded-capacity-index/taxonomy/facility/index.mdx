@@ -1,0 +1,44 @@
+# Facility
+
+The **Facility** layer represents the physical foundation of a data center: power delivery, heat removal, and the environmental conditions required for reliable IT operations.
+
+Facility infrastructure is designed with long planning horizons and significant capital investment, and it often becomes the first source of operational constraints as AI demand grows — compute capacity may exist while power distribution, cooling efficiency, or physical infrastructure prevent full utilization.
+
+Each concept describes a recurring pattern of capacity loss at this layer, its operational symptoms, and the underlying conditions that typically lead to it, providing a consistent vocabulary for operators, facility engineers, and infrastructure planners.
+
+<Chart
+  caption="Illustrative composition of Facility-layer constraints. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: { trigger: "item" },
+    legend: {
+      bottom: 0,
+      left: "center",
+      icon: "circle",
+      itemWidth: 10,
+      itemHeight: 10,
+    },
+    series: [
+      {
+        name: "Facility constraints",
+        type: "pie",
+        radius: ["45%", "70%"],
+        center: ["50%", "45%"],
+        itemStyle: { borderColor: "#faf8f2", borderWidth: 2 },
+        label: { show: false },
+        data: [
+          { value: 40, name: "Cooling", itemStyle: { color: "#c6a15b" } },
+          {
+            value: 35,
+            name: "Power delivery",
+            itemStyle: { color: "#202823" },
+          },
+          {
+            value: 25,
+            name: "Environmental",
+            itemStyle: { color: "#5c6259" },
+          },
+        ],
+      },
+    ],
+  }}
+/>

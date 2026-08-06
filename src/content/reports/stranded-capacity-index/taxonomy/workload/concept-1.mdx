@@ -1,0 +1,154 @@
+# Concept 1 (Placeholder)
+
+<Definition term="Concept 1 (Placeholder)">
+  A placeholder concept representing a form of stranded capacity caused by a
+  disconnect between available computing resources and workload execution
+  requirements.
+</Definition>
+
+## Overview
+
+The Workload layer is the final connection point between available infrastructure and productive computing activity. Even when facility and IT resources are available, capacity may remain stranded if workloads cannot effectively consume those resources.
+
+## What Operators Observe
+
+Operators may identify this condition through situations such as:
+
+- Available compute with limited active workload consumption.
+- Workloads that do not fully utilize assigned resources.
+- Difficulty matching workload demand with available infrastructure.
+
+## Why It Happens
+
+Modern AI workloads require complex resource coordination. Utilization depends on how workloads are planned, scheduled, prioritized, and executed, not just on hardware availability; when requirements and infrastructure are misaligned, resources may remain unused despite existing demand.
+
+## Operational Impact
+
+Potential impacts include:
+
+- Lower effective utilization of available compute.
+- Reduced efficiency of infrastructure investments.
+- Delays between resource availability and workload execution.
+
+## Example Scenario
+
+Consider a hypothetical AI environment with abundant available infrastructure. Because workload demand does not consistently align with provisioned resources, some resources remain idle while other workloads experience delays — stranded capacity at the workload layer without physical or hardware limitations.
+
+<Chart
+  caption="Illustrative utilization by hour of day and day of week, showing periods when available compute is not consumed by active workloads. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: {
+      position: "top",
+      formatter: "Utilization: {c}%",
+    },
+    grid: { left: 8, right: 16, top: 8, bottom: 44, containLabel: true },
+    xAxis: {
+      type: "category",
+      name: "Hour of day",
+      data: [
+        "00:00",
+        "03:00",
+        "06:00",
+        "09:00",
+        "12:00",
+        "15:00",
+        "18:00",
+        "21:00",
+      ],
+      splitArea: { show: true },
+    },
+    yAxis: {
+      type: "category",
+      name: "Day",
+      data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      splitArea: { show: true },
+    },
+    visualMap: {
+      min: 0,
+      max: 100,
+      calculable: true,
+      orient: "horizontal",
+      left: "center",
+      bottom: 4,
+      text: ["High", "Low"],
+      textStyle: { color: "#5c6259" },
+      inRange: { color: ["#faf8f2", "#c6a15b", "#202823"] },
+    },
+    series: [
+      {
+        type: "heatmap",
+        data: [
+          [0, 0, 30],
+          [1, 0, 25],
+          [2, 0, 40],
+          [3, 0, 78],
+          [4, 0, 85],
+          [5, 0, 82],
+          [6, 0, 60],
+          [7, 0, 45],
+          [0, 1, 32],
+          [1, 1, 26],
+          [2, 1, 42],
+          [3, 1, 80],
+          [4, 1, 88],
+          [5, 1, 84],
+          [6, 1, 62],
+          [7, 1, 46],
+          [0, 2, 28],
+          [1, 2, 24],
+          [2, 2, 38],
+          [3, 2, 76],
+          [4, 2, 86],
+          [5, 2, 81],
+          [6, 2, 58],
+          [7, 2, 44],
+          [0, 3, 31],
+          [1, 3, 25],
+          [2, 3, 41],
+          [3, 3, 79],
+          [4, 3, 87],
+          [5, 3, 83],
+          [6, 3, 61],
+          [7, 3, 45],
+          [0, 4, 29],
+          [1, 4, 23],
+          [2, 4, 36],
+          [3, 4, 72],
+          [4, 4, 78],
+          [5, 4, 74],
+          [6, 4, 52],
+          [7, 4, 40],
+          [0, 5, 22],
+          [1, 5, 18],
+          [2, 5, 20],
+          [3, 5, 35],
+          [4, 5, 42],
+          [5, 5, 38],
+          [6, 5, 28],
+          [7, 5, 24],
+          [0, 6, 20],
+          [1, 6, 16],
+          [2, 6, 18],
+          [3, 6, 30],
+          [4, 6, 36],
+          [5, 6, 34],
+          [6, 6, 26],
+          [7, 6, 22],
+        ],
+        itemStyle: { borderColor: "#faf8f2", borderWidth: 2 },
+        emphasis: { itemStyle: { borderColor: "#202823", borderWidth: 2 } },
+      },
+    ],
+  }}
+/>
+
+<Figure
+  src="/images/placeholders/workload-concept-1.svg"
+  caption="Illustrative example of a Workload-layer stranded capacity scenario."
+/>
+
+<Blockquote>
+  This placeholder concept demonstrates how workload-related capacity
+  constraints can be documented within the PhysaFlow stranded capacity taxonomy;
+  the final report will replace it with the official category definition.
+</Blockquote>

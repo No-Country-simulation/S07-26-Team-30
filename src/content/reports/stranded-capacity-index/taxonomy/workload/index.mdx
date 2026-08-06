@@ -1,0 +1,56 @@
+# Workload
+
+The **Workload** layer focuses on how computing resources are assigned, scheduled, and consumed by applications and operational workloads.
+
+Stranded capacity occurs here when available compute is not effectively transformed into productive execution due to workload management, scheduling decisions, or operational constraints. As AI workloads become more complex and resource-intensive, efficient utilization depends on continuously matching available resources with workload demand.
+
+Each concept describes a pattern where capacity may remain disconnected from productive workloads and what operators observe. The layer establishes a common language between infrastructure teams, platform operators, and workload owners; the concepts are illustrative placeholders.
+
+<Chart
+  caption="Illustrative provisioned versus consumed compute across a representative day. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: { trigger: "axis" },
+    legend: {
+      bottom: 0,
+      left: "center",
+      icon: "circle",
+      itemWidth: 10,
+      itemHeight: 10,
+    },
+    grid: { left: 8, right: 16, top: 8, bottom: 8, containLabel: true },
+    xAxis: {
+      type: "category",
+      boundaryGap: false,
+      data: ["00:00", "04:00", "08:00", "12:00", "16:00", "20:00", "24:00"],
+    },
+    yAxis: { type: "value" },
+    series: [
+      {
+        name: "Provisioned",
+        type: "line",
+        smooth: true,
+        symbol: "none",
+        data: [92, 88, 85, 90, 86, 82, 91],
+        lineStyle: { width: 2, color: "#202823" },
+        itemStyle: { color: "#202823" },
+        areaStyle: { opacity: 0.06, color: "#202823" },
+      },
+      {
+        name: "Consumed",
+        type: "line",
+        smooth: true,
+        symbol: "none",
+        data: [40, 32, 62, 71, 68, 45, 38],
+        lineStyle: { width: 2, color: "#c6a15b" },
+        itemStyle: { color: "#c6a15b" },
+        areaStyle: { opacity: 0.06, color: "#c6a15b" },
+      },
+    ],
+  }}
+/>
+
+<Blockquote>
+  The Workload layer highlights that available infrastructure alone does not
+  guarantee productive capacity. Effective utilization depends on the alignment
+  between resources, scheduling, and operational demand.
+</Blockquote>

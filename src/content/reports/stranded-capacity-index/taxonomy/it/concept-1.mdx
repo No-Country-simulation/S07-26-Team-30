@@ -1,0 +1,86 @@
+# Concept 1 (Placeholder)
+
+<Definition term="Concept 1 (Placeholder)">
+  A placeholder concept representing a form of stranded capacity caused by
+  limitations within the IT infrastructure layer, demonstrating how compute
+  resources may exist but remain disconnected from productive workload
+  execution.
+</Definition>
+
+## Overview
+
+Stranded capacity within the IT layer occurs when installed resources cannot be fully utilized despite being available. The limitation is not the absence of hardware, but the inability to convert existing infrastructure into productive computing capacity.
+
+## What Operators Observe
+
+Operators may identify this type of stranded capacity through situations such as:
+
+- Available compute resources that cannot be allocated effectively.
+- Hardware utilization below expected operational targets.
+- Differences between installed capacity and capacity delivered to workloads.
+
+## Why It Happens
+
+IT infrastructure consists of interconnected components that must work together to deliver compute capacity. Capacity becomes stranded when configuration, resource allocation methods, or operational processes prevent efficient consumption; hardware availability alone does not guarantee production support.
+
+## Operational Impact
+
+This type of constraint may result in:
+
+- Reduced effective utilization of installed infrastructure.
+- Lower return on investment from deployed hardware.
+- Increased complexity in capacity planning.
+
+## Example Scenario
+
+Consider a hypothetical environment where additional compute infrastructure was deployed for growing AI demand. Although the hardware is installed and operational, limitations prevent all resources from being efficiently assigned to active workloads, leaving part of the infrastructure underutilized without any hardware failure.
+
+<Chart
+  caption="Illustrative scatter of allocated versus utilized capacity across IT resource pools; points below the diagonal indicate capacity that is installed but not delivered. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: {
+      trigger: "item",
+      formatter: "{b}<br/>Installed: {c0}%<br/>Utilized: {c1}%",
+    },
+    grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
+    xAxis: {
+      type: "value",
+      name: "Installed capacity (%)",
+      min: 0,
+      max: 100,
+      axisLabel: { formatter: "{value}%" },
+    },
+    yAxis: {
+      type: "value",
+      name: "Utilization (%)",
+      min: 0,
+      max: 100,
+      axisLabel: { formatter: "{value}%" },
+    },
+    series: [
+      {
+        type: "scatter",
+        symbolSize: 16,
+        data: [
+          { value: [100, 52], name: "Accelerator pools" },
+          { value: [100, 74], name: "CPU pools" },
+          { value: [100, 68], name: "Storage arrays" },
+          { value: [100, 80], name: "Network fabrics" },
+        ],
+        itemStyle: { color: "#202823", opacity: 0.75 },
+        emphasis: { itemStyle: { color: "#c6a15b", opacity: 1 } },
+      },
+    ],
+  }}
+/>
+
+<Figure
+  src="/images/placeholders/it-concept-1.svg"
+  caption="Illustrative example of an IT-layer stranded capacity scenario."
+/>
+
+<Blockquote>
+  This placeholder concept demonstrates the structure and language style
+  intended for the final PhysaFlow taxonomy; the definitive category will be
+  introduced in the final report version.
+</Blockquote>

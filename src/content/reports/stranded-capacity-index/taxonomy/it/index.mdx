@@ -1,0 +1,43 @@
+# IT
+
+The **IT** layer focuses on the computing infrastructure that transforms physical resources into usable processing capacity: servers, accelerators, storage, networking, virtualization platforms, and the software that allocates and manages those resources.
+
+Even when sufficient power and cooling are available, limitations within compute platforms, hardware allocation strategies, or infrastructure management processes can prevent effective utilization of installed capacity — compute resources that are technically available but cannot be efficiently assigned to productive workloads.
+
+This section introduces illustrative placeholder concepts and a vocabulary for discussing infrastructure-level constraints independently of the physical facility or scheduling layers.
+
+<Chart
+  caption="Illustrative comparison of installed versus deliverable capacity across IT-layer components. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: { trigger: "axis" },
+    legend: {
+      bottom: 0,
+      left: "center",
+      icon: "circle",
+      itemWidth: 10,
+      itemHeight: 10,
+    },
+    grid: { left: 8, right: 16, top: 8, bottom: 8, containLabel: true },
+    yAxis: { type: "value", max: 100, axisLabel: { formatter: "{value}%" } },
+    xAxis: {
+      type: "category",
+      data: ["Servers", "Accelerators", "Storage", "Networking"],
+    },
+    series: [
+      {
+        name: "Installed",
+        type: "bar",
+        barWidth: 14,
+        data: [100, 100, 100, 100],
+        itemStyle: { color: "#c6a15b", borderRadius: [3, 3, 0, 0] },
+      },
+      {
+        name: "Deliverable",
+        type: "bar",
+        barWidth: 14,
+        data: [78, 64, 85, 71],
+        itemStyle: { color: "#202823", borderRadius: [3, 3, 0, 0] },
+      },
+    ],
+  }}
+/>
