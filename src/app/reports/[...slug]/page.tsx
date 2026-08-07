@@ -27,7 +27,7 @@ export default async function ReportPage({ params }: Props) {
 
   return (
     <ReportLayout nav={nav} slug={report}>
-      <article className="prose max-w-3xl mx-auto py-12">
+      <article /*className="prose max-w-3xl mx-auto py-12"*/>
         <Content />
       </article>
     </ReportLayout>
