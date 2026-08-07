@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { groq } from "@ai-sdk/groq";
 import { StaticSearchProvider } from "@/lib/context-provider";
 import { SYSTEM_PROMPT, buildContext } from "@/lib/prompts";
 import path from "node:path";
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   const context = await provider.getRelevantContext(query);
 
   const result = streamText({
-    model: openai("gpt-4o-mini"),
+    model: groq("llama-3.3-70b-versatile"),
     system: `${SYSTEM_PROMPT}\n\nReport context:\n${context}`,
     messages,
   });
