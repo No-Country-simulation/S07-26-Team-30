@@ -1,0 +1,173 @@
+## 2. Taxonomy of Stranded Capacity
+
+The taxonomy groups stranded capacity into three complementary operational layers — Facility, IT, and Workload — each with its own recurring patterns, symptoms, costs, and root causes.
+
+### 2.1. Layer 1: Facility (Power & Thermal Infrastructure)
+
+The Facility layer covers power delivery and thermal management: transformers, UPS systems, PDUs, chilled water loops, and containment. It is designed with long planning horizons and significant capital investment, and it often becomes the first source of operational constraints as AI demand grows — compute capacity may exist while power distribution, cooling efficiency, or physical infrastructure prevent full utilization.
+
+#### 2.1.1. Static Thermal Headroom (STH)
+
+Over-cooling driven by static safety margins that decouple cooling output from actual dynamic heat generation.
+
+<Label>What You See</Label>
+
+- Chilled water loop temperatures running 3–5 °C lower than ASHRAE recommended thresholds.
+- PUE remains static despite drops in compute utilization.
+
+<Label>What It Costs</Label>
+
+- 8–14% excess energy consumption at the chiller plant.
+- Thousands of gallons of evaporative water loss daily.
+
+<Label>Why It Occurs</Label>
+
+Facility operators set static safety margins to prevent localized hot spots during unpredictable GPU power spikes, decoupling cooling output from actual dynamic heat generation.
+
+#### 2.1.2. Power Distribution Stranding (PDS)
+
+Capacity held in transformers, UPS systems, and PDUs by theoretical peak draws that are never reached.
+
+<Label>What You See</Label>
+
+- Power Distribution Units (PDUs) capped at 65% utilization while nameplate capacity indicates available headroom.
+- UPS load factors below design intent despite active compute demand.
+
+<Label>What It Costs</Label>
+
+- Megawatts of contracted grid power locked behind administrative caps that cannot be assigned to new racks.
+
+<Label>Why It Occurs</Label>
+
+Conservative static provisioning based on worst-case theoretical peak draws rather than real-time telemetry-backed dynamic capping.
+
+#### 2.1.3. Liquid Cooling Flow Mismatch (LCFM)
+
+Static coolant flow rates applied to dynamic GPU loads, leaving thermal capacity unused or overcooling idle hardware.
+
+<Label>What You See</Label>
+
+- Coolant flow setpoints unchanged across idle and peak workload phases.
+- GPU inlet temperatures well below design targets while flow remains at nominal.
+
+<Label>What It Costs</Label>
+
+- Pumping energy and cooling capacity committed to hardware that does not need it, reducing the thermal envelope available for productive racks.
+
+<Label>Why It Occurs</Label>
+
+Flow setpoints are commissioned once and rarely rebalanced because cooling control loops do not receive workload telemetry.
+
+<Chart
+  caption="Thermal headroom and localized hot spots across a rack grid: cool zones show unused thermal capacity, gold zones sit on static margins, and dark zones are at their thermal limit while adjacent racks stay idle. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: {
+      position: "top",
+      formatter: "Row {b}: rack {c} utilization",
+    },
+    grid: { left: 8, right: 8, top: 8, bottom: 64, containLabel: true },
+    xAxis: {
+      type: "category",
+      data: [
+        "R1", "R2", "R3", "R4", "R5", "R6",
+        "R7", "R8", "R9", "R10", "R11", "R12",
+      ],
+      splitArea: { show: true },
+      axisLine: { lineStyle: { color: "#202823" } },
+      axisLabel: { color: "#202823" },
+    },
+    yAxis: {
+      type: "category",
+      data: ["Row A", "Row B", "Row C", "Row D"],
+      splitArea: { show: true },
+      axisLine: { lineStyle: { color: "#202823" } },
+      axisLabel: { color: "#202823" },
+    },
+    visualMap: {
+      min: 0,
+      max: 100,
+      calculable: true,
+      orient: "horizontal",
+      left: "center",
+      bottom: 8,
+      textStyle: { color: "#202823" },
+      inRange: { color: ["#E5E7EB", "#D4AF37", "#0B2B26"] },
+    },
+    series: [
+      {
+        type: "heatmap",
+        data: [
+          [0, 0, 42], [1, 0, 55], [2, 0, 61], [3, 0, 48], [4, 0, 74], [5, 0, 88],
+          [6, 0, 91], [7, 0, 72], [8, 0, 50], [9, 0, 44], [10, 0, 58], [11, 0, 66],
+          [0, 1, 68], [1, 1, 78], [2, 1, 85], [3, 1, 90], [4, 1, 95], [5, 1, 82],
+          [6, 1, 60], [7, 1, 52], [8, 1, 70], [9, 1, 76], [10, 1, 63], [11, 1, 47],
+          [0, 2, 35], [1, 2, 40], [2, 2, 46], [3, 2, 57], [4, 2, 66], [5, 2, 73],
+          [6, 2, 69], [7, 2, 58], [8, 2, 45], [9, 2, 38], [10, 2, 49], [11, 2, 55],
+          [0, 3, 30], [1, 3, 36], [2, 3, 42], [3, 3, 39], [4, 3, 51], [5, 3, 62],
+          [6, 3, 71], [7, 3, 64], [8, 3, 53], [9, 3, 44], [10, 3, 37], [11, 3, 32],
+        ],
+        label: { show: false },
+        itemStyle: { borderColor: "#faf8f2", borderWidth: 2 },
+      },
+    ],
+  }}
+/>
+
+<Chart
+  caption="Provisioned versus utilized power at PDU level: the shaded gold band represents reserved-but-unused capacity held by static caps. The dashed green line marks the contractual provisioning limit that telemetry-backed capping could reassign. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: { trigger: "axis" },
+    legend: {
+      bottom: 0,
+      left: "center",
+      icon: "circle",
+      itemWidth: 10,
+      itemHeight: 10,
+    },
+    grid: { left: 8, right: 16, top: 16, bottom: 56, containLabel: true },
+    xAxis: {
+      type: "category",
+      data: ["PDU-01", "PDU-02", "PDU-03", "PDU-04", "PDU-05", "PDU-06"],
+      axisLine: { lineStyle: { color: "#202823" } },
+      axisLabel: { color: "#202823" },
+    },
+    yAxis: {
+      type: "value",
+      max: 100,
+      name: "% of nameplate",
+      axisLabel: { formatter: "{value}%" },
+      splitLine: { lineStyle: { color: "rgba(32, 40, 35, 0.12)" } },
+    },
+    series: [
+      {
+        name: "Utilized power",
+        type: "line",
+        stack: "pdu",
+        symbol: "circle",
+        symbolSize: 6,
+        data: [58, 63, 51, 66, 44, 60],
+        lineStyle: { color: "#0B2B26", width: 2.5 },
+        itemStyle: { color: "#0B2B26" },
+        areaStyle: { color: "#0B2B26", opacity: 0.15 },
+      },
+      {
+        name: "Reserved but unused",
+        type: "line",
+        stack: "pdu",
+        symbol: "none",
+        lineStyle: { color: "transparent" },
+        itemStyle: { color: "transparent" },
+        data: [27, 22, 34, 19, 41, 25],
+        areaStyle: { color: "rgba(212, 175, 55, 0.25)" },
+      },
+      {
+        name: "Static cap",
+        type: "line",
+        symbol: "none",
+        data: [85, 85, 85, 85, 85, 85],
+        lineStyle: { color: "#202823", width: 2, type: "dashed" },
+        itemStyle: { color: "#202823" },
+      },
+    ],
+  }}
+/>

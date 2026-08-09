@@ -1,0 +1,166 @@
+### 2.2. Layer 2: IT & Hardware Infrastructure
+
+Even when sufficient power and cooling are available, limitations within compute platforms, hardware allocation strategies, or infrastructure management processes can prevent effective utilization of installed capacity — compute resources that are technically available but cannot be efficiently assigned to productive workloads.
+
+#### 2.2.1. Unbalanced Thermal Throttling (UTT)
+
+Frequency reduction in specific nodes caused by regional thermal misalignment, degrading whole-cluster throughput.
+
+<Label>What You See</Label>
+
+- GPU clocks stepping down on individual racks while adjacent racks run at full boost.
+- Temperature deltas across the cluster exceeding 10 °C under identical workloads.
+
+<Label>What It Costs</Label>
+
+- Reduced training throughput: slow nodes hold back synchronized steps across the entire job.
+
+<Label>Why It Occurs</Label>
+
+Cooling distribution is imbalanced while scheduling is thermal-agnostic, so hot nodes throttle instead of the workload moving or the cooling adapting.
+
+#### 2.2.2. Underutilized Interconnect Bandwidth (UIB)
+
+Network latency and inefficiency that keep high-end GPUs idle waiting for data.
+
+<Label>What You See</Label>
+
+- Fabric utilization well below capacity while GPU compute utilization drops during all-reduce and checkpoint phases.
+- Long tail latencies on specific paths despite low average utilization.
+
+<Label>What It Costs</Label>
+
+- Expensive GPU-seconds burned on data movement instead of computation across every training step.
+
+<Label>Why It Occurs</Label>
+
+Topology-unaware placement or static routing spreads traffic unevenly, and orchestration does not co-schedule data movement with compute.
+
+#### 2.2.3. Power Cap Buffering (PCB)
+
+Rigid per-server power caps that prevent optimal performance even when the facility has headroom available.
+
+<Label>What You See</Label>
+
+- Servers pinned below their allowed power envelope while PDUs report surplus capacity.
+- Sustained power capping events on nodes that never trip facility limits.
+
+<Label>What It Costs</Label>
+
+- Predictable performance loss bounded only by the cap, not by actual thermal or power constraints.
+
+<Label>Why It Occurs</Label>
+
+Power caps are assigned statically at provisioning time and never revisited against real telemetry, so safety buffers become permanent performance ceilings.
+
+<Chart
+  caption="GPU clock frequency versus temperature across cluster racks: healthy nodes cluster at high clocks and moderate temperatures, while thermally misaligned nodes drop clocks sharply — the signature of unbalanced thermal throttling. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: {
+      trigger: "item",
+      formatter: "Temp {c[0]} °C / Clock {c[1]} MHz",
+    },
+    legend: {
+      bottom: 0,
+      left: "center",
+      icon: "circle",
+      itemWidth: 10,
+      itemHeight: 10,
+    },
+    grid: { left: 8, right: 16, top: 16, bottom: 56, containLabel: true },
+    xAxis: {
+      type: "value",
+      name: "Temperature (°C)",
+      min: 50,
+      max: 100,
+      axisLabel: { color: "#202823" },
+      splitLine: { lineStyle: { color: "rgba(32, 40, 35, 0.12)" } },
+    },
+    yAxis: {
+      type: "value",
+      name: "Clock (MHz)",
+      min: 1000,
+      max: 2200,
+      axisLabel: { color: "#202823" },
+      splitLine: { lineStyle: { color: "rgba(32, 40, 35, 0.12)" } },
+    },
+    series: [
+      {
+        name: "Healthy nodes",
+        type: "scatter",
+        symbolSize: 9,
+        data: [
+          [58, 2100], [60, 2088], [62, 2095], [59, 2050], [63, 2044],
+          [61, 2077], [64, 2030], [57, 2062], [65, 2018], [60, 2092],
+        ],
+        itemStyle: { color: "#0B2B26", opacity: 0.8 },
+      },
+      {
+        name: "Throttling margin",
+        type: "scatter",
+        symbolSize: 9,
+        data: [
+          [72, 1820], [75, 1740], [78, 1680], [71, 1860], [80, 1600],
+          [74, 1765], [77, 1702], [73, 1801], [79, 1640], [76, 1725],
+        ],
+        itemStyle: { color: "#D4AF37", opacity: 0.85 },
+      },
+      {
+        name: "Severely throttled",
+        type: "scatter",
+        symbolSize: 9,
+        data: [
+          [88, 1320], [92, 1240], [95, 1180], [90, 1280], [86, 1360],
+          [93, 1215], [89, 1305], [96, 1150], [87, 1340], [91, 1255],
+        ],
+        itemStyle: { color: "#5c6259", opacity: 0.85 },
+      },
+    ],
+  }}
+/>
+
+<Chart
+  caption="Model FLOPs Utilization (MFU) loss breakdown: memory bandwidth, network latency, static power caps, and thermal throttling each consume a share of the theoretical FLOPs peak; scheduling gaps account for the remainder. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      formatter: "{b}: {c}% of theoretical peak",
+    },
+    grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
+    xAxis: {
+      type: "value",
+      max: 40,
+      name: "Loss (% of peak)",
+      axisLabel: { formatter: "{value}%" },
+      splitLine: { lineStyle: { color: "rgba(32, 40, 35, 0.12)" } },
+    },
+    yAxis: {
+      type: "category",
+      data: [
+        "Thermal throttling",
+        "Power caps",
+        "Network latency",
+        "Memory bandwidth",
+        "Scheduling gaps",
+      ],
+      axisLine: { lineStyle: { color: "#202823" } },
+      axisLabel: { color: "#202823" },
+    },
+    series: [
+      {
+        name: "MFU loss",
+        type: "bar",
+        barWidth: 16,
+        data: [
+          { value: 11, itemStyle: { color: "#5c6259" } },
+          { value: 9, itemStyle: { color: "#202823" } },
+          { value: 12, itemStyle: { color: "#D4AF37" } },
+          { value: 8, itemStyle: { color: "#a9ae9f" } },
+          { value: 7, itemStyle: { color: "#E5E7EB" } },
+        ],
+        itemStyle: { borderRadius: [0, 3, 3, 0] },
+      },
+    ],
+  }}
+/>

@@ -2,36 +2,14 @@ import type { NavItem } from "@/types";
 
 const NAV: Record<string, NavItem[]> = {
   "stranded-capacity-index": [
-    { label: "Introduction", slug: "introduction" },
-    {
-      label: "Facility",
-      slug: "taxonomy/facility",
-      children: [
-        { label: "Concept 1", slug: "taxonomy/facility/concept-1" },
-        { label: "Concept 2", slug: "taxonomy/facility/concept-2" },
-        { label: "Concept 3", slug: "taxonomy/facility/concept-3" },
-      ],
-    },
-    {
-      label: "IT",
-      slug: "taxonomy/it",
-      children: [
-        { label: "Concept 1", slug: "taxonomy/it/concept-1" },
-        { label: "Concept 2", slug: "taxonomy/it/concept-2" },
-      ],
-    },
-    {
-      label: "Workload",
-      slug: "taxonomy/workload",
-      children: [
-        { label: "Concept 1", slug: "taxonomy/workload/concept-1" },
-        { label: "Concept 2", slug: "taxonomy/workload/concept-2" },
-      ],
-    },
-    { label: "Methodology", slug: "methodology" },
-    { label: "Conclusion", slug: "conclusion" },
-    { label: "References", slug: "references" },
-    { label: "How to Cite", slug: "how-to-cite" },
+    { label: "1. Executive Summary", slug: "01-executive-summary" },
+    { label: "2. Taxonomy", slug: "02-facility-layer" },
+    { label: "2.2 IT Layer", slug: "03-it-layer" },
+    { label: "2.3 Workload Layer", slug: "04-workload-layer" },
+    { label: "3. Methodology & Benchmarks", slug: "05-methodology" },
+    { label: "4. Remediation & Recovery", slug: "06-remediation" },
+    { label: "5. How to Cite", slug: "07-how-to-cite" },
+    { label: "6. References", slug: "08-references" },
   ],
 };
 
@@ -56,36 +34,22 @@ const MDX_MODULES: Record<
   Record<string, () => Promise<{ default: React.ComponentType }>>
 > = {
   "stranded-capacity-index": {
-    introduction: () =>
-      import("@/content/reports/stranded-capacity-index/introduction.mdx"),
-    methodology: () =>
-      import("@/content/reports/stranded-capacity-index/methodology.mdx"),
-    "taxonomy/facility": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/facility/index.mdx"),
-    "taxonomy/facility/concept-1": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/facility/concept-1.mdx"),
-    "taxonomy/facility/concept-2": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/facility/concept-2.mdx"),
-    "taxonomy/facility/concept-3": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/facility/concept-3.mdx"),
-    "taxonomy/it": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/it/index.mdx"),
-    "taxonomy/it/concept-1": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/it/concept-1.mdx"),
-    "taxonomy/it/concept-2": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/it/concept-2.mdx"),
-    "taxonomy/workload": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/workload/index.mdx"),
-    "taxonomy/workload/concept-1": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/workload/concept-1.mdx"),
-    "taxonomy/workload/concept-2": () =>
-      import("@/content/reports/stranded-capacity-index/taxonomy/workload/concept-2.mdx"),
-    references: () =>
-      import("@/content/reports/stranded-capacity-index/references.mdx"),
-    "how-to-cite": () =>
-      import("@/content/reports/stranded-capacity-index/how-to-cite.mdx"),
-    conclusion: () =>
-      import("@/content/reports/stranded-capacity-index/conclusion.mdx"),
+    "01-executive-summary": () =>
+      import("@/content/reports/stranded-capacity-index/01-executive-summary.mdx"),
+    "02-facility-layer": () =>
+      import("@/content/reports/stranded-capacity-index/02-facility-layer.mdx"),
+    "03-it-layer": () =>
+      import("@/content/reports/stranded-capacity-index/03-it-layer.mdx"),
+    "04-workload-layer": () =>
+      import("@/content/reports/stranded-capacity-index/04-workload-layer.mdx"),
+    "05-methodology": () =>
+      import("@/content/reports/stranded-capacity-index/05-methodology.mdx"),
+    "06-remediation": () =>
+      import("@/content/reports/stranded-capacity-index/06-remediation.mdx"),
+    "07-how-to-cite": () =>
+      import("@/content/reports/stranded-capacity-index/07-how-to-cite.mdx"),
+    "08-references": () =>
+      import("@/content/reports/stranded-capacity-index/08-references.mdx"),
   },
 };
 
