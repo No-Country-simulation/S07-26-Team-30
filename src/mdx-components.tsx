@@ -3,6 +3,7 @@ import {
   Figure,
   Blockquote,
   Definition,
+  Label,
   TableOfContents,
   Chart,
 } from "@/components/report";
@@ -12,6 +13,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Figure,
     Blockquote,
     Definition,
+    Label,
     TableOfContents,
     Chart,
     ...components,
