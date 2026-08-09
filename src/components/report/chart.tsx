@@ -25,12 +25,14 @@ import {
   type TreemapSeriesOption,
 } from "echarts/charts";
 import {
+  GraphicComponent,
   GridComponent,
   LegendComponent,
   RadarComponent,
   TitleComponent,
   TooltipComponent,
   VisualMapComponent,
+  type GraphicComponentOption,
   type GridComponentOption,
   type LegendComponentOption,
   type RadarComponentOption,
@@ -54,6 +56,7 @@ echarts.use([
   TreemapChart,
   HeatmapChart,
   GridComponent,
+  GraphicComponent,
   RadarComponent,
   VisualMapComponent,
   TooltipComponent,
@@ -75,6 +78,7 @@ export type ChartOption = echarts.ComposeOption<
   | TreemapSeriesOption
   | HeatmapSeriesOption
   | GridComponentOption
+  | GraphicComponentOption
   | RadarComponentOption
   | VisualMapComponentOption
   | TooltipComponentOption
@@ -97,6 +101,174 @@ function downloadDataUrl(dataUrl: string, filename: string) {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
+}
+
+const WATERMARK = "Source: PhysaFlow Stranded Capacity Index (PSCI)";
+
+const MOBILE_BREAKPOINT = 520;
+const MOBILE_HEIGHT_SCALE = 1.15;
+
+// Compact mutation target; options are JSON-serializable, so values are loose.
+type LooseOption = Record<string, any>;
+
+function truncate(value: unknown, max: number): string {
+  const text = String(value ?? "");
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+/**
+ * Builds the execution option for the current viewport width.
+ * Desktop uses the MDX-provided option as-is; narrow viewports get a
+ * compacted layout: confined tooltips, scrollable legend, rotated and
+ * truncated axis labels, smaller sankey nodes, and tighter grids.
+ * Functions are safe here because this runs client-side only.
+ */
+function buildChartOption(option: ChartOption, width: number): ChartOption {
+  if (width >= MOBILE_BREAKPOINT) return option;
+
+  const o = JSON.parse(JSON.stringify(option)) as LooseOption;
+
+  // Tooltips must never overflow the viewport on touch devices.
+  o.tooltip = { ...(o.tooltip ?? {}), confine: true };
+
+  // Legend: scrollable, full-width, compact with truncated names.
+  if (o.legend && typeof o.legend === "object") {
+    o.legend = {
+      ...o.legend,
+      type: "scroll",
+      left: 0,
+      right: 0,
+      width: "100%",
+      iconSize: 8,
+      itemWidth: 8,
+      itemHeight: 8,
+      textStyle: { ...(o.legend.textStyle ?? {}), fontSize: 10 },
+      formatter: (name: string) => truncate(name, 16),
+    };
+  }
+
+  // Grids: keep axis labels inside the plot area.
+  if (o.grid && typeof o.grid === "object") {
+    o.grid = { ...o.grid, containLabel: true, left: 6, right: 6 };
+  }
+
+  // Category axes with many items: rotate and truncate labels.
+  for (const axisKey of ["xAxis", "yAxis"]) {
+    const raw = o[axisKey];
+    const axes = Array.isArray(raw) ? raw : [raw];
+    for (const axis of axes) {
+      if (!axis || typeof axis !== "object" || axis.type !== "category") continue;
+      const itemCount = Array.isArray(axis.data) ? axis.data.length : 0;
+      axis.axisLabel = {
+        ...(axis.axisLabel ?? {}),
+        fontSize: 10,
+        hideOverlap: true,
+        interval: 0,
+        ...(itemCount > 5 ? { rotate: 35 } : {}),
+        formatter: (value: unknown) => truncate(value, itemCount > 5 ? 10 : 16),
+      };
+    }
+  }
+
+  if (Array.isArray(o.series)) {
+    for (const series of o.series) {
+      if (!series || typeof series !== "object") continue;
+      if (series.type === "sankey") {
+        series.nodeWidth = 8;
+        series.nodeGap = 8;
+        series.label = {
+          ...(series.label ?? {}),
+          fontSize: 10,
+          width: 88,
+          overflow: "truncate",
+        };
+      } else if (series.type === "heatmap") {
+        series.itemStyle = { ...(series.itemStyle ?? {}), borderWidth: 1 };
+      } else if (
+        series.type === "bar" ||
+        series.type === "line" ||
+        series.type === "scatter"
+      ) {
+        if (series.label && series.label.show) {
+          series.label = { ...series.label, fontSize: 10 };
+        }
+      }
+    }
+  }
+
+  // Radar: compact axis names and radius.
+  if (o.radar && typeof o.radar === "object") {
+    o.radar = {
+      ...o.radar,
+      radius: "58%",
+      axisName: { ...(o.radar.axisName ?? {}), fontSize: 10 },
+    };
+  }
+
+  // VisualMap: smaller so it fits beside the heatmap.
+  if (o.visualMap && typeof o.visualMap === "object") {
+    o.visualMap = {
+      ...o.visualMap,
+      itemWidth: 10,
+      itemHeight: 80,
+      textStyle: { ...(o.visualMap.textStyle ?? {}), fontSize: 10 },
+    };
+  }
+
+  return o as ChartOption;
+}
+
+function withWatermark(option: ChartOption): ChartOption {
+  // Options are JSON-serializable (server-component prop), so a deep clone is safe.
+  const cloned = JSON.parse(JSON.stringify(option)) as ChartOption;
+  const graphic = Array.isArray(cloned.graphic) ? cloned.graphic : [];
+  return {
+    ...cloned,
+    graphic: [
+      ...graphic,
+      {
+        type: "text",
+        left: "center",
+        bottom: 6,
+        silent: true,
+        style: {
+          text: WATERMARK,
+          fill: "rgba(32, 40, 35, 0.35)",
+          fontSize: 10,
+          fontWeight: 500,
+        },
+      },
+    ],
+  };
+}
+
+function renderOffscreen(
+  option: ChartOption,
+  width: number,
+  height: number,
+  renderer: "canvas" | "svg",
+) {
+  const host = document.createElement("div");
+  host.style.position = "absolute";
+  host.style.left = "-99999px";
+  host.style.top = "0";
+  host.style.width = `${width}px`;
+  host.style.height = `${height}px`;
+  document.body.appendChild(host);
+
+  const chart = echarts.init(host, undefined, { renderer, width, height });
+  chart.setOption(withWatermark(option));
+  const dataUrl =
+    renderer === "svg"
+      ? chart.getDataURL({ type: "svg" })
+      : chart.getDataURL({
+          type: "png",
+          pixelRatio: 2,
+          backgroundColor: "#fff",
+        });
+  chart.dispose();
+  host.remove();
+  return dataUrl;
 }
 
 interface DownloadButtonProps {
@@ -128,6 +300,8 @@ export function Chart({
   const chartRef = useRef<ReturnType<typeof echarts.init> | null>(null);
   const optionRef = useRef(option);
   optionRef.current = option;
+  const heightRef = useRef(height);
+  heightRef.current = height;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -135,9 +309,32 @@ export function Chart({
 
     const chart = echarts.init(container, undefined, { renderer: "svg" });
     chartRef.current = chart;
-    chart.setOption(optionRef.current);
+    let mobile = false;
+    const baseHeight = heightRef.current;
 
-    const observer = new ResizeObserver(() => chart.resize());
+    const apply = () => {
+      const width = container.clientWidth;
+      const nextMobile = width < MOBILE_BREAKPOINT;
+
+      // Re-apply the option only when crossing the breakpoint;
+      // plain resize() is enough for everything else.
+      if (nextMobile !== mobile) {
+        mobile = nextMobile;
+        container.style.height = `${Math.round(
+          baseHeight * (nextMobile ? MOBILE_HEIGHT_SCALE : 1),
+        )}px`;
+        chart.setOption(
+          nextMobile
+            ? buildChartOption(optionRef.current, width)
+            : optionRef.current,
+          { notMerge: true },
+        );
+      }
+      chart.resize();
+    };
+
+    apply();
+    const observer = new ResizeObserver(apply);
     observer.observe(container);
 
     return () => {
@@ -155,24 +352,12 @@ export function Chart({
 
     const width = Math.round(chart.getWidth());
     const heightPx = Math.round(chart.getHeight());
-
-    const host = document.createElement("div");
-    host.style.position = "absolute";
-    host.style.left = "-99999px";
-    host.style.top = "0";
-    host.style.width = `${width}px`;
-    host.style.height = `${heightPx}px`;
-    document.body.appendChild(host);
-
-    const pngChart = echarts.init(host, undefined, { renderer: "canvas" });
-    pngChart.setOption(optionRef.current);
-    const dataUrl = pngChart.getDataURL({
-      type: "png",
-      pixelRatio: 2,
-      backgroundColor: "#fff",
-    });
-    pngChart.dispose();
-    host.remove();
+    const dataUrl = renderOffscreen(
+      optionRef.current,
+      width,
+      heightPx,
+      "canvas",
+    );
 
     downloadDataUrl(dataUrl, `${baseName}.png`);
   };
@@ -180,11 +365,21 @@ export function Chart({
   const downloadSvg = () => {
     const chart = chartRef.current;
     if (!chart) return;
-    downloadDataUrl(chart.getDataURL({ type: "svg" }), `${baseName}.svg`);
+
+    const width = Math.round(chart.getWidth());
+    const heightPx = Math.round(chart.getHeight());
+    const dataUrl = renderOffscreen(
+      optionRef.current,
+      width,
+      heightPx,
+      "svg",
+    );
+
+    downloadDataUrl(dataUrl, `${baseName}.svg`);
   };
 
   return (
-    <figure className={cn("my-8", className)}>
+    <figure className={cn("my-10", className)}>
       {title && (
         <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
@@ -198,7 +393,7 @@ export function Chart({
         <div ref={containerRef} style={{ height }} />
       </div>
       {caption && (
-        <figcaption className="mt-2 text-center text-sm text-muted-foreground">
+        <figcaption className="mt-2.5 text-center text-[0.875rem] leading-relaxed text-muted-foreground">
           {caption}
         </figcaption>
       )}
