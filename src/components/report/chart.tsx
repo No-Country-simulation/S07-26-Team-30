@@ -310,15 +310,17 @@ export function Chart({
     const chart = echarts.init(container, undefined, { renderer: "svg" });
     chartRef.current = chart;
     let mobile = false;
+    let applied = false;
     const baseHeight = heightRef.current;
 
     const apply = () => {
       const width = container.clientWidth;
       const nextMobile = width < MOBILE_BREAKPOINT;
 
-      // Re-apply the option only when crossing the breakpoint;
-      // plain resize() is enough for everything else.
-      if (nextMobile !== mobile) {
+      // Always apply the option on the first pass (the chart starts empty),
+      // then re-apply only when crossing the breakpoint.
+      if (!applied || nextMobile !== mobile) {
+        applied = true;
         mobile = nextMobile;
         container.style.height = `${Math.round(
           baseHeight * (nextMobile ? MOBILE_HEIGHT_SCALE : 1),
