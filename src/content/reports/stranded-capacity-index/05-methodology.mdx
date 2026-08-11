@@ -1,0 +1,130 @@
+## 3. PSCI Measurement Methodology & Benchmarks
+
+### 3.1. Key Metrics & Formulas
+
+The PSCI formalizes stranded capacity as a measurable ratio between what is provisioned and what becomes productive compute.
+
+**PSCI (%) = (Provisioned capacity − Productive compute) / Provisioned capacity × 100**
+
+Each operational layer contributes a sub-index, so losses can be attributed and prioritized:
+
+- **PSCI-facility**: thermal and power capacity contracted but not delivered to IT loads.
+- **PSCI-it**: hardware capacity installed but not converted into FLOPs.
+- **PSCI-workload**: schedulable capacity lost to orchestration inefficiency.
+
+**MFU vs. PUE alignment.** PUE measures facility energy efficiency but is blind to compute output; MFU measures what fraction of theoretical FLOPs a workload achieves but is blind to energy. PSCI relates both: a facility with excellent PUE and a workload with low MFU still strands the majority of its contracted compute. Operators should track PUE and MFU together, with PSCI as the single reconciliation metric.
+
+### 3.2. Baseline Hyperscale Benchmarks
+
+Across surveyed hyperscale environments, typical stranded capacity ranges from **22% to 38%** of contracted capacity, depending on design maturity and operational tooling. The dominant loss layer varies by facility generation: older facilities lose more at the Facility layer, while newer, thermally efficient facilities shift the balance toward Workload losses.
+
+| Layer | Typical loss range | Dominant pattern |
+| --- | --- | --- |
+| Facility | 8–15% | Static Thermal Headroom, Power Distribution Stranding |
+| IT | 6–12% | Unbalanced Thermal Throttling, Power Cap Buffering |
+| Workload | 6–14% | Barrier Synchronization Idle, Over-Provisioned Allocation |
+
+<Chart
+  caption="Stranded capacity footprint across operating dimensions: a high score means high efficiency in that dimension. The Facility layer typically scores well on power delivery but poorly on scheduling alignment, while the Workload layer shows the inverse — most stranded capacity sits in the dimensions the operator does not instrument. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: {},
+    legend: {
+      bottom: 0,
+      left: "center",
+      icon: "circle",
+      itemWidth: 10,
+      itemHeight: 10,
+    },
+    radar: {
+      indicator: [
+        { name: "Thermal alignment", max: 100 },
+        { name: "Power utilization", max: 100 },
+        { name: "Cooling efficiency", max: 100 },
+        { name: "Scheduling awareness", max: 100 },
+        { name: "Interconnect utilization", max: 100 },
+      ],
+      radius: "65%",
+      axisName: { color: "#202823" },
+      splitArea: { areaStyle: { color: ["#faf8f2", "#f3f0e6"] } },
+      splitLine: { lineStyle: { color: "rgba(32, 40, 35, 0.15)" } },
+      axisLine: { lineStyle: { color: "rgba(32, 40, 35, 0.25)" } },
+    },
+    series: [
+      {
+        type: "radar",
+        symbolSize: 5,
+        data: [
+          {
+            name: "Facility",
+            value: [78, 62, 70, 34, 40],
+            lineStyle: { color: "#0B2B26", width: 2 },
+            itemStyle: { color: "#0B2B26" },
+            areaStyle: { color: "#0B2B26", opacity: 0.12 },
+          },
+          {
+            name: "IT",
+            value: [58, 55, 52, 48, 62],
+            lineStyle: { color: "#D4AF37", width: 2 },
+            itemStyle: { color: "#D4AF37" },
+            areaStyle: { color: "#D4AF37", opacity: 0.15 },
+          },
+          {
+            name: "Workload",
+            value: [40, 46, 38, 72, 55],
+            lineStyle: { color: "#5c6259", width: 2 },
+            itemStyle: { color: "#5c6259" },
+            areaStyle: { color: "#5c6259", opacity: 0.12 },
+          },
+        ],
+      },
+    ],
+  }}
+/>
+
+<Chart
+  caption="PSCI benchmark range across Tier III and Tier IV data centers: Tier IV design redundancy adds resilience but also more provisioned capacity that can strand; operational tooling, not certification class, is the main differentiator. Bars show the midpoint of typical loss ranges. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      formatter: "{b}: {c}% stranded",
+    },
+    legend: {
+      bottom: 0,
+      left: "center",
+      icon: "circle",
+      itemWidth: 10,
+      itemHeight: 10,
+    },
+    grid: { left: 8, right: 16, top: 16, bottom: 56, containLabel: true },
+    yAxis: {
+      type: "value",
+      max: 45,
+      name: "Stranded capacity (%)",
+      axisLabel: { formatter: "{value}%" },
+      splitLine: { lineStyle: { color: "rgba(32, 40, 35, 0.12)" } },
+    },
+    xAxis: {
+      type: "category",
+      data: ["Facility", "IT", "Workload", "Overall PSCI"],
+      axisLine: { lineStyle: { color: "#202823" } },
+      axisLabel: { color: "#202823" },
+    },
+    series: [
+      {
+        name: "Tier III",
+        type: "bar",
+        barWidth: 18,
+        data: [14, 11, 13, 38],
+        itemStyle: { color: "#D4AF37", borderRadius: [3, 3, 0, 0] },
+      },
+      {
+        name: "Tier IV",
+        type: "bar",
+        barWidth: 18,
+        data: [17, 10, 11, 38],
+        itemStyle: { color: "#0B2B26", borderRadius: [3, 3, 0, 0] },
+      },
+    ],
+  }}
+/>

@@ -1,0 +1,112 @@
+### 2.3. Layer 3: Workload & Orchestration
+
+The Workload layer addresses orchestration, scheduling, and workload placement. Even with power, cooling, and hardware fully available, scheduling decisions — or their absence — can leave the most expensive compute hardware in the facility idle, waiting on synchronization, thermal awareness, or overly conservative reservations.
+
+#### 2.3.1. Non-Aware Thermal Scheduling (NATS)
+
+Planning of massive AI jobs without considering the thermal or energy state of the facility.
+
+<Label>What You See</Label>
+
+- Jobs packed into thermally constrained zones while chilled zones sit empty.
+- Hot spots forming at a predictable cadence that mirrors the job schedule.
+
+<Label>What It Costs</Label>
+
+- Throttling cascades that reduce job throughput despite nominal capacity being available elsewhere.
+
+<Label>Why It Occurs</Label>
+
+Schedulers select nodes from a free-list, ignoring thermal and power telemetry, so placement actively creates the constraints the facility then has to manage reactively.
+
+#### 2.3.2. Barrier Synchronization Idle (BSI)
+
+Dead time for high-performance GPUs while waiting for synchronization with slower nodes.
+
+<Label>What You See</Label>
+
+- GPU utilization dropping in step with all-reduce and barrier phases of distributed training.
+- Total step time significantly exceeding the compute phase of the slowest node.
+
+<Label>What It Costs</Label>
+
+- Expensive GPU-seconds spent idle on every training step, multiplied across thousands of steps.
+
+<Label>Why It Occurs</Label>
+
+Distributed training is only as fast as its slowest member; without topology-aware scheduling and co-design, stragglers force the entire cluster to wait.
+
+#### 2.3.3. Over-Provisioned Job Allocation (OPJA)
+
+Excessive resource reservation by developers to avoid out-of-memory (OOM) failures.
+
+<Label>What You See</Label>
+
+- Jobs requesting far more memory and accelerators than their measured steady-state usage.
+- Queue lengths growing while aggregate cluster utilization stays moderate.
+
+<Label>What It Costs</Label>
+
+- Reserved-but-unused resources that cannot be granted to other jobs — stranded capacity created by the scheduler's own allocation policy.
+
+<Label>Why It Occurs</Label>
+
+Developers size requests for worst-case peaks as insurance against OOM, and the scheduler has no incentive or mechanism to reclaim idle reservations.
+
+<Chart
+  caption="Multi-node training step timeline: the green segment is actual compute, gold is barrier synchronization wait, and gray is checkpoint idle. Nodes with weaker cooling or slower fabrics become stragglers and hold back every step of the job. Values are illustrative and do not represent production measurements."
+  option={{
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      formatter: "{b}: {c} ms",
+    },
+    legend: {
+      bottom: 0,
+      left: "center",
+      icon: "circle",
+      itemWidth: 10,
+      itemHeight: 10,
+    },
+    grid: { left: 8, right: 16, top: 16, bottom: 56, containLabel: true },
+    xAxis: {
+      type: "value",
+      max: 100,
+      name: "Step time (ms)",
+      axisLabel: { formatter: "{value}" },
+      splitLine: { lineStyle: { color: "rgba(32, 40, 35, 0.12)" } },
+    },
+    yAxis: {
+      type: "category",
+      data: ["Node 6", "Node 5", "Node 4", "Node 3", "Node 2", "Node 1"],
+      axisLine: { lineStyle: { color: "#202823" } },
+      axisLabel: { color: "#202823" },
+    },
+    series: [
+      {
+        name: "Compute",
+        type: "bar",
+        stack: "step",
+        barWidth: 16,
+        data: [40, 38, 35, 32, 30, 28],
+        itemStyle: { color: "#0B2B26" },
+      },
+      {
+        name: "Barrier wait",
+        type: "bar",
+        stack: "step",
+        barWidth: 16,
+        data: [22, 20, 18, 15, 12, 10],
+        itemStyle: { color: "#D4AF37" },
+      },
+      {
+        name: "Checkpoint idle",
+        type: "bar",
+        stack: "step",
+        barWidth: 16,
+        data: [8, 8, 8, 8, 8, 8],
+        itemStyle: { color: "#a9ae9f" },
+      },
+    ],
+  }}
+/>

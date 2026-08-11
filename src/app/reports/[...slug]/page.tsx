@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { getReportNav, resolveMdx } from "@/lib/mdx";
-import { ReportLayout } from "@/components/report/report-layout";
+import { resolveAllMdx } from "@/lib/mdx";
+import { LandingHero } from "@/components/layout/landing-hero";
 
 interface Props {
   params: Promise<{ slug: string[] }>;
@@ -11,25 +11,32 @@ export async function generateMetadata({ params }: Props) {
   const [report] = slug;
   return {
     title: `PhysaFlow — ${report}`,
-    description: `Report: ${slug.join("/")}`,
+    description: `Report: ${report}`,
   };
 }
 
 export default async function ReportPage({ params }: Props) {
   const { slug } = await params;
-  const [report, ...section] = slug;
+  const [report] = slug;
 
-  const mdx = await resolveMdx(report, section.join("/") || "introduction");
-  if (!mdx) notFound();
-
-  const { default: Content } = mdx;
-  const nav = await getReportNav(report);
+  const sections = await resolveAllMdx(report);
+  if (sections.length === 0) notFound();
 
   return (
-    <ReportLayout nav={nav} slug={report}>
-      <article className="prose max-w-3xl mx-auto py-12">
-        <Content />
+    <>
+      <LandingHero />
+      <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        {sections.map(({ slug: section, Component }, index) => (
+          <section
+            key={section}
+            id={section}
+            className="scroll-mt-24 first:pt-0"
+          >
+            {index > 0 && <hr className="mb-8 border-t border-border/60" />}
+            <Component />
+          </section>
+        ))}
       </article>
-    </ReportLayout>
+    </>
   );
 }
