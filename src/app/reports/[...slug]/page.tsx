@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { resolveAllMdx } from "@/lib/mdx";
-import { ReportHero } from "@/components/report/report-hero";
+import { LandingHero } from "@/components/layout/landing-hero";
 
 interface Props {
   params: Promise<{ slug: string[] }>;
@@ -24,7 +24,7 @@ export default async function ReportPage({ params }: Props) {
 
   return (
     <>
-      <ReportHero />
+      <LandingHero />
       <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {sections.map(({ slug: section, Component }, index) => (
           <section
