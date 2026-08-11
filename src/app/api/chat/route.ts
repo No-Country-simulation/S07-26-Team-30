@@ -10,21 +10,14 @@ const reportDir = path.join(
 );
 
 const provider = new StaticSearchProvider(reportDir, {
-  introduction: "introduction.mdx",
-  methodology: "methodology.mdx",
-  "taxonomy/facility": "taxonomy/facility/index.mdx",
-  "taxonomy/facility/concept-1": "taxonomy/facility/concept-1.mdx",
-  "taxonomy/facility/concept-2": "taxonomy/facility/concept-2.mdx",
-  "taxonomy/facility/concept-3": "taxonomy/facility/concept-3.mdx",
-  "taxonomy/it": "taxonomy/it/index.mdx",
-  "taxonomy/it/concept-1": "taxonomy/it/concept-1.mdx",
-  "taxonomy/it/concept-2": "taxonomy/it/concept-2.mdx",
-  "taxonomy/workload": "taxonomy/workload/index.mdx",
-  "taxonomy/workload/concept-1": "taxonomy/workload/concept-1.mdx",
-  "taxonomy/workload/concept-2": "taxonomy/workload/concept-2.mdx",
-  references: "references.mdx",
-  "how-to-cite": "how-to-cite.mdx",
-  conclusion: "conclusion.mdx",
+  "executive-summary": "01-executive-summary.mdx",
+  "facility-layer": "02-facility-layer.mdx",
+  "it-layer": "03-it-layer.mdx",
+  "workload-layer": "04-workload-layer.mdx",
+  methodology: "05-methodology.mdx",
+  remediation: "06-remediation.mdx",
+  "how-to-cite": "07-how-to-cite.mdx",
+  references: "08-references.mdx",
 });
 
 export const maxDuration = 30;
