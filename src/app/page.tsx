@@ -9,7 +9,7 @@ export default function HomePage() {
         infrastructure in AI data centers.
       </p>
       <Link
-        href="/reports/stranded-capacity-index/introduction"
+        href="/reports/stranded-capacity-index"
         className="mt-8 inline-block rounded-lg bg-primary px-6 py-3 text-primary-foreground font-medium transition hover:opacity-90"
       >
         Read the report

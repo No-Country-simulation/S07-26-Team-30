@@ -5,7 +5,7 @@ interface BlockquoteProps {
 
 export function Blockquote({ children, source }: BlockquoteProps) {
   return (
-    <blockquote className="my-6 border-l-4 border-primary pl-4 italic">
+    <blockquote className="my-8 border-l-4 border-primary pl-4 italic leading-relaxed">
       {children}
       {source && (
         <footer className="mt-1 text-sm not-italic text-muted-foreground">

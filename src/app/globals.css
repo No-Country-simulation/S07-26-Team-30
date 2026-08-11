@@ -3,46 +3,30 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.145 0 0);
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.145 0 0);
-  --color-primary: oklch(0.205 0.042 265.755);
-  --color-primary-foreground: oklch(0.985 0 0);
-  --color-secondary: oklch(0.965 0.001 286.375);
-  --color-secondary-foreground: oklch(0.205 0.042 265.755);
-  --color-muted: oklch(0.965 0.001 286.375);
-  --color-muted-foreground: oklch(0.556 0.019 286.375);
-  --color-accent: oklch(0.965 0.001 286.375);
-  --color-accent-foreground: oklch(0.205 0.042 265.755);
+  --color-background: #f5f3ec;
+  --color-foreground: #202823;
+  --color-card: #faf8f2;
+  --color-card-foreground: #202823;
+  --color-popover: #faf8f2;
+  --color-popover-foreground: #202823;
+  --color-primary: #202823;
+  --color-primary-foreground: #f5f3ec;
+  --color-secondary: #e8e4d8;
+  --color-secondary-foreground: #202823;
+  --color-muted: #e8e4d8;
+  --color-muted-foreground: #5c6259;
+  --color-accent: #c6a15b;
+  --color-accent-foreground: #202823;
   --color-destructive: oklch(0.577 0.245 27.325);
-  --color-border: oklch(0.922 0.004 286.375);
-  --color-input: oklch(0.922 0.004 286.375);
-  --color-ring: oklch(0.205 0.042 265.755);
+  --color-border: #dcd7c9;
+  --color-input: #dcd7c9;
+  --color-ring: #202823;
   --radius: 0.625rem;
 }
 
-.dark {
-  --color-background: oklch(0.145 0 0);
-  --color-foreground: oklch(0.985 0 0);
-  --color-card: oklch(0.205 0.042 265.755);
-  --color-card-foreground: oklch(0.985 0 0);
-  --color-popover: oklch(0.205 0.042 265.755);
-  --color-popover-foreground: oklch(0.985 0 0);
-  --color-primary: oklch(0.985 0 0);
-  --color-primary-foreground: oklch(0.205 0.042 265.755);
-  --color-secondary: oklch(0.269 0.015 286.375);
-  --color-secondary-foreground: oklch(0.985 0 0);
-  --color-muted: oklch(0.269 0.015 286.375);
-  --color-muted-foreground: oklch(0.708 0.01 286.375);
-  --color-accent: oklch(0.269 0.015 286.375);
-  --color-accent-foreground: oklch(0.985 0 0);
-  --color-destructive: oklch(0.704 0.191 22.216);
-  --color-border: oklch(1 0 0 / 0.1);
-  --color-input: oklch(1 0 0 / 0.15);
-  --color-ring: oklch(0.556 0.019 286.375);
+@theme inline {
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
 }
 
 @layer base {
@@ -51,5 +35,126 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(1rem, 0.9rem + 0.25vw, 1.0625rem);
+    line-height: 1.7;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    color: var(--color-foreground);
+  }
+  /* Scale: 16px base, ratio ~1.27. H1 only on the document title (01). */
+  h1 {
+    font-size: clamp(2.25rem, 1.75rem + 2.5vw, 3rem);
+    font-weight: 650;
+    line-height: 1.1;
+    letter-spacing: -0.022em;
+    margin-top: 0.25em;
+    margin-bottom: 0.4em;
+  }
+  h2 {
+    font-size: clamp(1.5rem, 1.375rem + 0.8vw, 2rem);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.018em;
+    margin-top: 4rem;
+    margin-bottom: 1.25rem;
+  }
+  h3 {
+    font-size: clamp(1.25rem, 1.175rem + 0.5vw, 1.5rem);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+  }
+  h4 {
+    font-size: clamp(1.125rem, 1.0625rem + 0.3125vw, 1.25rem);
+    font-weight: 650;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    margin-top: 2.5rem;
+    margin-bottom: 0.625rem;
+  }
+  h5 {
+    font-size: 1.0625rem;
+    font-weight: 650;
+    line-height: 1.35;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  h6 {
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  p {
+    font-size: clamp(1rem, 0.9rem + 0.25vw, 1.0625rem);
+    margin-top: 0;
+    margin-bottom: 1.25em;
+  }
+  ul,
+  ol {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding-left: 1.375rem;
+  }
+  li {
+    margin-bottom: 0.4em;
+    line-height: 1.65;
+  }
+  li > ul,
+  li > ol {
+    margin-top: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+  blockquote {
+    margin: 2rem 0;
+  }
+  strong {
+    font-weight: 600;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+    margin: 1.5rem 0;
+  }
+  th,
+  td {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    font-weight: 600;
+  }
+  thead th {
+    border-bottom: 2px solid var(--color-foreground);
+  }
+  pre,
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.875rem;
+  }
+  pre {
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+  hr {
+    border-color: var(--color-border);
   }
 }

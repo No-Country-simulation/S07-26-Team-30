@@ -59,7 +59,11 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
 
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), role: "assistant", content: assistantContent },
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: assistantContent,
+        },
       ]);
     } catch {
       setMessages((prev) => [
@@ -102,7 +106,10 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t p-3">
+      <form
+        onSubmit={handleSubmit}
+        className="flex items-center gap-2 border-t p-3"
+      >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
