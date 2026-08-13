@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   title: "PhysaFlow — Stranded Capacity Index Report",
   description:
     "An industry reference report on stranded capacity in AI data centers.",
+  icons: {
+    icon: [{ url: "/images/icon-notext.webp", type: "image/webp" }],
+  },
 };
 
 export default function RootLayout({
