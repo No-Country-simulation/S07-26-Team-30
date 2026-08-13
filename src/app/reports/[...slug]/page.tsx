@@ -27,16 +27,18 @@ export default async function ReportPage({ params }: Props) {
 
   return (
     <>
-      <LandingHero />
+      <LandingHero reportSlug={report} />
       <ReportLayout nav={nav} slug={report}>
-        <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
           {sections.map(({ slug: section, Component }, index) => (
             <section
               key={section}
               id={section}
-              className="scroll-mt-[var(--reading-offset)] first:pt-0"
+              className={`scroll-mt-[var(--reading-offset)] first:pt-0${
+                index > 0 ? " print:break-before-page" : ""
+              }`}
             >
-              {index > 0 && <hr className="section-divider" />}
+              {index > 0 && <hr className="section-divider print:hidden" />}
               <Component />
             </section>
           ))}

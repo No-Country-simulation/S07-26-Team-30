@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { NavItem } from "@/types";
 import { cn } from "@/lib/utils";
+import { PdfDownloadButton } from "./pdf-download-button";
 
 /**
  * Distance (px) from the viewport top at which a target heading is
@@ -43,7 +44,7 @@ function resolveTarget(item: NavItem): HTMLElement | null {
   return document.getElementById(item.slug);
 }
 
-export function ReportIndex({ items }: { items: NavItem[] }) {
+export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string }) {
   const leaves = useMemo(() => flatten(items), [items]);
   const [active, setActive] = useState(leaves[0]?.slug ?? "");
   const [headingOffset] = useState(readReadingOffset);
@@ -202,6 +203,7 @@ export function ReportIndex({ items }: { items: NavItem[] }) {
             item.children?.length ? renderGroup(item) : renderRow(item, 0),
           )}
         </ol>
+        <PdfDownloadButton slug={slug} variant="compact" />
       </nav>
     </aside>
   );

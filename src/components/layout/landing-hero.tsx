@@ -1,10 +1,11 @@
 import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import hero from "@/app/assets/proyecto_nuevo_7.png";
+import { PdfDownloadButton } from "@/components/report/pdf-download-button";
 
-export function LandingHero() {
+export function LandingHero({ reportSlug }: { reportSlug: string }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
+    <div className="relative min-h-screen overflow-hidden bg-background print:hidden">
       <Image
         src={hero}
         alt="PhysaFlow hero"
@@ -42,12 +43,7 @@ export function LandingHero() {
               workload scheduling.
             </h3>
             <div className="mt-10 flex items-center justify-center gap-x-4">
-              <a
-                href="#"
-                className="rounded-md bg-accent px-6 py-3 text-sm font-semibold text-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent/90 hover:shadow-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                Download the report
-              </a>
+              <PdfDownloadButton slug={reportSlug} variant="primary" />
               <a
                 href="#"
                 className="group inline-flex items-center gap-2 rounded-md border border-accent/60 bg-transparent px-6 py-3 text-sm font-semibold text-[#e8cf9a] transition-all duration-200 hover:-translate-y-0.5 hover:border-accent hover:bg-accent/10 hover:shadow-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
