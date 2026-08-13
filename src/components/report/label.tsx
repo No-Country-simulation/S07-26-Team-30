@@ -6,15 +6,10 @@ interface LabelProps {
 /**
  * Eyebrow / kicker label used for section markers and the
  * "What You See / What It Costs / Why It Occurs" blocks.
- * Dark gold (#8C6D1F) keeps text contrast WCAG-compliant;
- * the pure brand gold (#D4AF37) is reserved for charts and decoration.
+ * Uses the `.eyebrow` component class: deep gold (#7A5C15) keeps text
+ * contrast WCAG-compliant; the pure brand gold (#C6A15B) is reserved for
+ * rules, charts, and decoration.
  */
 export function Label({ children, className = "" }: LabelProps) {
-  return (
-    <p
-      className={`mt-6 text-xs font-semibold uppercase tracking-widest text-[#8C6D1F] ${className}`}
-    >
-      {children}
-    </p>
-  );
+  return <p className={`eyebrow mt-8 ${className}`}>{children}</p>;
 }
