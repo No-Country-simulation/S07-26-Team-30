@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
 import type { NavItem } from "@/types";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "./share-button";
 
 function readReadingOffset(): number {
   if (typeof window === "undefined") return 112;
@@ -17,9 +19,11 @@ function readReadingOffset(): number {
 export function ReadingProgress({
   items,
   title,
+  slug,
 }: {
   items: NavItem[];
   title: string;
+  slug: string;
 }) {
   const [visible, setVisible] = useState(false);
   const [pct, setPct] = useState(0);
@@ -81,16 +85,30 @@ export function ReadingProgress({
   return (
     <div
       className={cn(
-        "sticky top-0 z-50 w-full transition-[opacity,transform] duration-300",
+        "sticky top-0 z-50 w-full print:hidden transition-[opacity,transform] duration-300",
         visible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none -translate-y-2 opacity-0",
       )}
     >
-      <div className="border-b border-white/10 bg-[#1E5A40] pt-8">
-        <p className="mb-8 truncate px-4 text-center font-display text-lg font-semibold tracking-wide text-white sm:px-6">
-          {title}
-        </p>
+      <div className="border-b border-white/10 bg-[#1E5A40]">
+        <div className="mx-auto flex w-full max-w-[1400px] items-center justify-end gap-4 px-4 py-6 sm:justify-between sm:px-6 lg:px-8">
+          <p className="m-0 hidden min-w-0 truncate text-left font-display text-lg font-normal tracking-wide text-white sm:block">
+            {title}
+          </p>
+          <div className="flex shrink-0 items-center gap-5">
+            <ShareButton title={title} />
+            <a
+              href={`/api/reports/pdf?slug=${encodeURIComponent(slug)}`}
+              className="flex shrink-0 flex-col items-center gap-1 bg-transparent text-white transition-colors duration-200 hover:text-[#e8cf9a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              <Download aria-hidden="true" className="size-5" />
+              <span className="text-[0.625rem] font-semibold uppercase tracking-[0.2em]">
+                Download
+              </span>
+            </a>
+          </div>
+        </div>
       </div>
 
       <div
