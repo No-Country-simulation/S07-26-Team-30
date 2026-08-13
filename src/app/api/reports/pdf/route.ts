@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chromium, type Browser } from "playwright";
+import { chromium as playwrightChromium, type Browser } from "playwright-core";
+import sparticuzChromium from "@sparticuz/chromium";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 // Reuse one Chromium instance across requests: launching per request is the
 // dominant fixed cost. The instance survives in the same Node process (dev,
@@ -9,9 +11,23 @@ export const dynamic = "force-dynamic";
 // so this cache is a no-op there — behavior stays correct.
 let browserPromise: Promise<Browser> | null = null;
 
+async function launchBrowser(): Promise<Browser> {
+  if (process.env.VERCEL) {
+    // Serverless has no system browser. @sparticuz/chromium ships a
+    // compressed Chromium tuned for Lambda/Vercel (no system deps needed).
+    return playwrightChromium.launch({
+      args: sparticuzChromium.args,
+      executablePath: await sparticuzChromium.executablePath(),
+      headless: true,
+    });
+  }
+  // Local dev: use the Chromium installed by `npx playwright install chromium`.
+  return playwrightChromium.launch();
+}
+
 async function getBrowser(): Promise<Browser> {
   if (!browserPromise) {
-    browserPromise = chromium.launch();
+    browserPromise = launchBrowser();
   }
   return browserPromise;
 }
