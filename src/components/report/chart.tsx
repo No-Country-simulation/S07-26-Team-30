@@ -281,7 +281,7 @@ function DownloadButton({ label, onDownload }: DownloadButtonProps) {
     <button
       type="button"
       onClick={onDownload}
-      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-accent/60 hover:bg-accent/5 hover:text-foreground"
     >
       <Download className="h-3.5 w-3.5" aria-hidden />
       {label}
@@ -381,13 +381,13 @@ export function Chart({
   };
 
   return (
-    <figure className={cn("my-10", className)}>
+    <figure className={cn("my-12", className)}>
       {title && (
-        <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
           {title}
         </p>
       )}
-      <div className="rounded-lg border bg-card p-3">
+      <div className="rounded-xl border border-border bg-card p-3 shadow-card">
         <div className="mb-2 flex items-center justify-end gap-2">
           <DownloadButton label="Download PNG" onDownload={downloadPng} />
           <DownloadButton label="Download SVG" onDownload={downloadSvg} />
@@ -395,8 +395,11 @@ export function Chart({
         <div ref={containerRef} style={{ height }} />
       </div>
       {caption && (
-        <figcaption className="mt-2.5 text-center text-[0.875rem] leading-relaxed text-muted-foreground">
-          {caption}
+        <figcaption className="mt-4 text-center">
+          <span aria-hidden="true" className="mx-auto mb-2.5 block h-px w-10 bg-accent/60" />
+          <span className="mx-auto block max-w-xl text-sm leading-relaxed text-muted-foreground text-pretty">
+            {caption}
+          </span>
         </figcaption>
       )}
     </figure>

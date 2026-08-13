@@ -1,6 +1,7 @@
 export interface NavItem {
   label: string;
   slug: string;
+  anchor?: string;
   children?: NavItem[];
 }
 

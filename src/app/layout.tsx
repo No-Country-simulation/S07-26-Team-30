@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "PhysaFlow — Stranded Capacity Index Report",
   description:
     "An industry reference report on stranded capacity in AI data centers.",
+  icons: {
+    icon: [{ url: "/images/icon-notext.webp", type: "image/webp" }],
+  },
 };
 
 export default function RootLayout({
@@ -31,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
         className={`${sansDisplay.variable} ${inter.variable} min-h-screen antialiased`}
       >
