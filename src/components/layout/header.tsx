@@ -15,10 +15,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header
-      style={{ backgroundColor: "#1E5A40" }}
-      className="sticky top-0 z-50"
-    >
+    <header style={{ backgroundColor: "#1E5A40" }}>
       <nav
         aria-label="Global"
         className="flex items-center justify-between p-6 lg:px-8"
