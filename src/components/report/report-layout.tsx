@@ -18,12 +18,12 @@ export function ReportLayout({ children, nav, slug }: ReportLayoutProps) {
     <div className="mx-auto w-full">
       <div
         aria-hidden="true"
-        className="h-px w-full bg-gradient-to-r from-transparent via-border/70 to-transparent"
+        className="h-px w-full bg-gradient-to-r from-transparent via-border/70 to-transparent print:hidden"
       />
-      <ReadingProgress items={nav} title={title} />
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-wrap gap-x-8 px-4 py-16 sm:py-20">
-        <ReportIndex items={nav} />
-        <main className="min-w-0 flex-1">{children}</main>
+      <ReadingProgress items={nav} title={title} slug={slug} />
+      <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 gap-x-8 px-4 py-16 print:px-0 print:py-0 sm:py-20 lg:grid-cols-[16rem_minmax(0,768px)_16rem]">
+        <ReportIndex items={nav} slug={slug} />
+        <main className="min-w-0">{children}</main>
       </div>
     </div>
   );
