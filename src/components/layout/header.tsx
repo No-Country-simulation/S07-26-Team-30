@@ -15,11 +15,9 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header style={{ backgroundColor: "#1E5A40" }}>
-      <nav
-        aria-label="Global"
-        className="flex items-center justify-between p-6 lg:px-8"
-      >
+    <header style={{ backgroundColor: "#1E5A40" }} className="print:hidden">
+      <nav aria-label="Global" className="py-6">
+        <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex lg:flex-1">
           <a href="#" className="-m-1.5 p-1.5">
             <span className="sr-only">PhysaFlow</span>
@@ -48,6 +46,7 @@ export function Header() {
               {item.name}
             </a>
           ))}
+        </div>
         </div>
       </nav>
       <Dialog
