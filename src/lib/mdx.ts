@@ -2,14 +2,32 @@ import type { NavItem } from "@/types";
 
 const NAV: Record<string, NavItem[]> = {
   "stranded-capacity-index": [
-    { label: "1. Executive Summary", slug: "01-executive-summary" },
-    { label: "2. Taxonomy", slug: "02-facility-layer" },
-    { label: "2.2 IT Layer", slug: "03-it-layer" },
-    { label: "2.3 Workload Layer", slug: "04-workload-layer" },
+    { label: "1. Introduction", slug: "01-executive-summary" },
+    {
+      label: "2. Taxonomy",
+      slug: "02-facility-layer",
+      anchor: "2-taxonomy-of-stranded-capacity",
+      children: [
+        {
+          label: "2.1. Facility Layer",
+          slug: "02-facility-layer",
+          anchor: "2-1-layer-1-facility-power-thermal-infrastructure",
+        },
+        {
+          label: "2.2. IT Layer",
+          slug: "03-it-layer",
+          anchor: "2-2-layer-2-it-hardware-infrastructure",
+        },
+        {
+          label: "2.3. Workload Layer",
+          slug: "04-workload-layer",
+          anchor: "2-3-layer-3-workload-orchestration",
+        },
+      ],
+    },
     { label: "3. Methodology & Benchmarks", slug: "05-methodology" },
-    { label: "4. Remediation & Recovery", slug: "06-remediation" },
-    { label: "5. How to Cite", slug: "07-how-to-cite" },
-    { label: "6. References", slug: "08-references" },
+    { label: "4. How to Cite", slug: "07-how-to-cite" },
+    { label: "5. References", slug: "08-references" },
   ],
 };
 
@@ -44,8 +62,6 @@ const MDX_MODULES: Record<
       import("@/content/reports/stranded-capacity-index/04-workload-layer.mdx"),
     "05-methodology": () =>
       import("@/content/reports/stranded-capacity-index/05-methodology.mdx"),
-    "06-remediation": () =>
-      import("@/content/reports/stranded-capacity-index/06-remediation.mdx"),
     "07-how-to-cite": () =>
       import("@/content/reports/stranded-capacity-index/07-how-to-cite.mdx"),
     "08-references": () =>

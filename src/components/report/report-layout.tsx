@@ -1,4 +1,6 @@
 import type { NavItem } from "@/types";
+import { ReportIndex } from "./report-index";
+import { ReadingProgress } from "./reading-progress";
 
 interface ReportLayoutProps {
   children: React.ReactNode;
@@ -6,24 +8,23 @@ interface ReportLayoutProps {
   slug: string;
 }
 
-export function ReportLayout({ children }: ReportLayoutProps) {
-  return (
-    <div className="mx-auto flex min-h-screen max-w-7xl gap-8 px-4 py-8">
-      <aside className="hidden w-64 shrink-0 lg:block">
-        <Sidebar />
-      </aside>
-      <main className="min-w-0 flex-1">{children}</main>
-    </div>
-  );
-}
+const titleize = (slug: string) =>
+  slug.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
-function Sidebar() {
+export function ReportLayout({ children, nav, slug }: ReportLayoutProps) {
+  const title = `PhysaFlow — ${titleize(slug)}`;
+
   return (
-    <nav className="sticky top-8 space-y-1">
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-        Report
-      </h2>
-      <p className="text-sm text-muted-foreground">Navigation placeholder</p>
-    </nav>
+    <div className="mx-auto w-full">
+      <div
+        aria-hidden="true"
+        className="h-px w-full bg-gradient-to-r from-transparent via-border/70 to-transparent print:hidden"
+      />
+      <ReadingProgress items={nav} title={title} slug={slug} />
+      <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 gap-x-8 px-4 py-16 print:px-0 print:py-0 sm:py-20 lg:grid-cols-[16rem_minmax(0,768px)_16rem]">
+        <ReportIndex items={nav} slug={slug} />
+        <main className="min-w-0">{children}</main>
+      </div>
+    </div>
   );
 }

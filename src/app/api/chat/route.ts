@@ -15,7 +15,6 @@ const provider = new StaticSearchProvider(reportDir, {
   "it-layer": "03-it-layer.mdx",
   "workload-layer": "04-workload-layer.mdx",
   methodology: "05-methodology.mdx",
-  remediation: "06-remediation.mdx",
   "how-to-cite": "07-how-to-cite.mdx",
   references: "08-references.mdx",
 });
