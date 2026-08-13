@@ -23,18 +23,33 @@ const provider = new StaticSearchProvider(reportDir, {
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  try {
+    const { messages } = await req.json();
 
-  const lastMessage = messages[messages.length - 1];
-  const query =
-    typeof lastMessage.content === "string" ? lastMessage.content : "";
-  const context = await provider.getRelevantContext(query);
+    if (!process.env.GROQ_API_KEY) {
+      return new Response(
+        "Por favor configura GROQ_API_KEY en tu archivo .env.local para usar el asistente de IA.",
+        { status: 400 }
+      );
+    }
 
-  const result = streamText({
-    model: groq("llama-3.3-70b-versatile"),
-    system: `${SYSTEM_PROMPT}\n\nReport context:\n${context}`,
-    messages,
-  });
+    const lastMessage = messages[messages.length - 1];
+    const query =
+      typeof lastMessage?.content === "string" ? lastMessage.content : "";
+    const context = await provider.getRelevantContext(query);
 
-  return result.toTextStreamResponse();
+    const result = streamText({
+      model: groq("llama-3.3-70b-versatile"),
+      system: `${SYSTEM_PROMPT}\n\nReport context:\n${context}`,
+      messages,
+    });
+
+    return result.toTextStreamResponse();
+  } catch (error: any) {
+    return new Response(
+      error.message || "Error procesando solicitud de chat",
+      { status: 500 }
+    );
+  }
 }
+

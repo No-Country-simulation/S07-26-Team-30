@@ -9,12 +9,14 @@ const sansDisplay = DM_Sans({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
+  fallback: ["system-ui", "sans-serif"],
 });
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
