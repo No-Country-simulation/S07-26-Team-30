@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getReportNav, resolveAllMdx } from "@/lib/mdx";
+import { getReportNav, resolveMdx } from "@/lib/mdx";
 import { LandingHero } from "@/components/layout/landing-hero";
 import { ReportLayout } from "@/components/report";
 
@@ -20,7 +20,7 @@ export default async function ReportPage({ params }: Props) {
   const { slug } = await params;
   const [report, ...section] = slug;
 
-  const mdx = await resolveMdx(report, section.join("/") || "introduction");
+  const mdx = await resolveMdx(report, section.join("/") || "01-executive-summary");
   if (!mdx) notFound();
 
   const { default: Content } = mdx;
@@ -28,9 +28,9 @@ export default async function ReportPage({ params }: Props) {
 
   return (
     <ReportLayout nav={nav} slug={report}>
-      <article/>
+      <article>
         <Content />
-      <article/>
+      </article>
     </ReportLayout>
   );
 }
