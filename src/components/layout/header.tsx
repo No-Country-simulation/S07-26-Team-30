@@ -5,6 +5,7 @@ import { Dialog, DialogPanel } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
 import hero from "../../app/assets/proyecto_nuevo_7.png"
+import logo from "../../../public/images/logohor.webp"
 
 const navigation = [
   { name: 'Introduction', href: '#' },
@@ -25,7 +26,7 @@ export function Header() {
           <div className="flex lg:flex-1">
             <a href="#" className="-m-1.5 p-1.5">
               <span className="sr-only">Your Company</span>
-              <h1 className="text-3xl font-bold tracking-[0.45rem] uppercase text-white transition-all duration-300 hover:text-emerald-200 hover:drop-shadow-lg">PhysaFlow</h1>
+              <Image src={logo} alt="Logo" className="h-20 w-auto" />
             </a>
           </div>
           <div className="flex lg:hidden">
