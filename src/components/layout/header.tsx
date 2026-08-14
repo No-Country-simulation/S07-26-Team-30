@@ -8,10 +8,10 @@ import hero from "../../app/assets/proyecto_nuevo_7.png"
 import logo from "../../../public/images/logohor.webp"
 
 const navigation = [
-  { name: 'Introduction', href: '#' },
-  { name: 'Taxonomy', href: '#' },
-  { name: 'Methodology', href: '#' },
-  { name: 'References', href: '#' },
+  { name: 'Introduction', href: '/reports/stranded-capacity-index#01-executive-summary' },
+  { name: 'Taxonomy', href: '/reports/stranded-capacity-index#02-facility-layer' },
+  { name: 'Methodology', href: '/reports/stranded-capacity-index#05-methodology' },
+  { name: 'References', href: '/reports/stranded-capacity-index#08-references' },
 ]
 
 export function Header() {
@@ -71,6 +71,7 @@ export function Header() {
                     <a
                       key={item.name}
                       href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
                       className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
                     >
                       {item.name}
