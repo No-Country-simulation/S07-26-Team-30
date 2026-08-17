@@ -145,6 +145,28 @@ export class StaticSearchProvider implements ContextProvider {
       score,
     }));
   }
+
+  // NUEVO:
+  // Devuelve secciones específicas del reporte para acciones predefinidas.
+  //
+  // A diferencia de getRelevantContext(), este método no realiza
+  // búsqueda por palabras clave ni limita los resultados a 3 secciones.
+  //
+  // Esto permite que acciones como "summary", "methodology" o "taxonomy"
+  // utilicen directamente las secciones que corresponden a cada acción.
+  async getSectionContext(slugs: string[]): Promise<SearchResult[]> {
+    await this.ensureLoaded();
+
+    return slugs
+      .map((slug) => this.sections.find((section) => section.slug === slug))
+      .filter((section): section is Section => Boolean(section))
+      .map((section) => ({
+        slug: section.slug,
+        title: section.title,
+        content: section.content,
+        score: 1,
+      }));
+  }
 }
 
 // -- helpers ----------------------------------------------------------------
