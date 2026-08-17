@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useEffect, useRef, useState } from 'react'
+import { Bars3Icon, ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
 import hero from "../../app/assets/proyecto_nuevo_7.png"
 import logo from "../../../public/images/logohor.webp"
@@ -15,14 +15,48 @@ const navigation = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const sectionRef = useRef<HTMLElement>(null)
+  const imageWrapRef = useRef<HTMLDivElement>(null)
+
+  const scrollToContent = () => {
+    const next = sectionRef.current?.nextElementSibling as HTMLElement | null
+    if (!next) return
+    const top = next.getBoundingClientRect().top + window.scrollY - 110
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+  }
+
+  // Parallax sutil sobre la imagen del hero: se mueve al 75% de la velocidad del scroll.
+  useEffect(() => {
+    const section = sectionRef.current
+    const imageWrap = imageWrapRef.current
+    if (!section || !imageWrap) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const cap = section.offsetHeight * 0.25
+      const y = Math.min(window.scrollY * 0.25, cap)
+      imageWrap.style.transform = `translateY(${y}px)`
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    return () => {
+      if (raf) cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [])
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <Image src={hero} alt="Hero" fill priority sizes="100vw" className="absolute inset-0 z-0 object-cover" />
-      <div className= "absolute inset-0 bg-black/40"/>
+    <>
       <header
-        style={{ backgroundColor: "rgba(17, 48, 36, 0.95)" }}
-        className="absolute inset-x-0 top-0 z-50 w-full transition-all duration-500"
+        style={{ backgroundColor: "rgb(15, 43, 32)" }}
+        className="relative z-50 w-full transition-all duration-500"
       >
         <div className="mx-auto flex h-[170px] w-full max-w-[1400px] items-center justify-between px-6">
           <a href="#" className="group flex items-center gap-3">
@@ -38,7 +72,7 @@ export function Header() {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-[1rem] font-medium text-white/60 transition-colors hover:text-[#e8cf9a]"
+                className="text-[1rem] font-medium text-white/60 transition-colors hover:text-[#d4a94e]"
               >
                 {item.name}
               </a>
@@ -63,7 +97,7 @@ export function Header() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden transition-colors hover:text-[#e8cf9a]"
+            className="md:hidden transition-colors hover:text-[#d4a94e]"
             style={{ color: "rgba(255,255,255,0.8)" }}
             aria-label={mobileMenuOpen ? "Close menu" : "Open main menu"}
           >
@@ -82,7 +116,7 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-base/7 font-semibold text-white/60 transition-colors hover:bg-white/5 hover:text-[#e8cf9a]"
+                  className="block rounded-lg px-3 py-2 text-base/7 font-semibold text-white/60 transition-colors hover:bg-white/5 hover:text-[#d4a94e]"
                 >
                   {item.name}
                 </a>
@@ -107,54 +141,64 @@ export function Header() {
         )}
       </header>
 
-      <div className="relative isolate px-6 pt-14 lg:px-8">
+      <section
+        ref={sectionRef}
+        className="relative h-[calc(100vh-170px)] w-full overflow-hidden"
+      >
+        {/* Imagen de fondo con parallax: wrapper 140% anclado abajo para que
+            nunca se vea un hueco al desplazarse */}
         <div
-          aria-hidden="true"
-          className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+          ref={imageWrapRef}
+          className="absolute inset-x-0 bottom-0 h-[140%] will-change-transform"
         >
-          <div
-            style={{
-              clipPath:
-                'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
-            }}
-            className="relative left-[calc(50%-11rem)] aspect-1155/678 w-144.5 -translate-x-1/2 rotate-30 bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-288.75"
+          <Image
+            src={hero}
+            alt="Hero"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
           />
         </div>
-        <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
-          <div className="text-center">
-            <h1 style={{color:'white' , fontFamily:'serif'}} className="text-5xl font-semibold tracking-tight text-balance text-white-900 sm:text-7xl">
-              The Reference Report on Isolated Capacity in AI Data Centers
+
+        {/* Degradado negro lineal ascendente */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"
+        />
+
+        {/* Texto centrado horizontal y verticalmente sobre la imagen */}
+        <div className="relative z-10 flex h-full items-center px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1400px] text-center">
+            <p className="m-0 font-display text-sm font-semibold uppercase tracking-[0.35em] text-[#d4a94e]">
+              PhysaFlow
+            </p>
+            <h1 className="mt-2 mb-0 font-display text-4xl font-semibold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+              Stranded Capacity: The Hidden Constraint Behind AI Infrastructure
             </h1>
-            <h3 style={{color:'white', fontFamily:'serif'}} className="mt-8 text-lg font-medium text-pretty text-white-500 sm:text-xl/8">
-              A taxonomy developed by PhysaFlow to identify, classify, and understand isolated capacity in modern data centers, analyzing the layers of physical infrastructure, IT infrastructure, and workload scheduling.
-            </h3>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <a style={{backgroundColor:'#C6A158'}}
-                href="#"
-                className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                Download the report 
-              </a>
-              <a style={{backgroundColor:'#0B1F17', color:'#C6A158'}} href="#" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                Explore Key Insights<span aria-hidden="true">→</span>
-              </a>
-            </div>
+            <p className="mt-2 mb-0 font-display text-base font-medium text-white/70 sm:text-lg">
+              August 20, 2026 | Report
+            </p>
           </div>
         </div>
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
+
+        {/* Botón de scroll flotando sobre la imagen y el degradado */}
+        <button
+          type="button"
+          onClick={scrollToContent}
+          aria-label="Read the report"
+          className="group absolute bottom-[10vh] left-1/2 z-10 flex -translate-x-1/2 cursor-pointer flex-col items-center gap-3"
         >
-          <div
-            style={{
-              clipPath:
-                'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
-            }}
-            className="relative left-[calc(50%+3rem)] aspect-1155/678 w-144.5 -translate-x-1/2 bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-288.75"
+          <span className="text-sm font-bold uppercase tracking-[0.2em] text-[#d4a94e] transition-colors duration-300 group-hover:text-white">
+            Read the report
+          </span>
+          <ChevronDownIcon
+            aria-hidden="true"
+            className="size-5 animate-levitate text-[#d4a94e] transition-all duration-300 group-hover:translate-y-1 group-hover:text-white group-hover:animate-none"
           />
-        </div>
-      </div>
-    </div>
+        </button>
+      </section>
+    </>
   )
 }
 
