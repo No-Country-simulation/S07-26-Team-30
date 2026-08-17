@@ -63,7 +63,8 @@
   h1,
   h2,
   h3 {
-    text-wrap: balance;
+    /* text-wrap por defecto (wrap): balance fue removido porque los títulos
+       largos quedaban con saltos prematuros y líneas a media capacidad. */
   }
   /* Scale: 16px base, ratio ~1.27. H1 only on the document title (01). */
   h1 {
