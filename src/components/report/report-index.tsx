@@ -145,7 +145,7 @@ export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string })
             depth > 0 ? "pl-9" : "pl-4",
             isActive
               ? "border-accent text-accent"
-              : "border-transparent text-muted-foreground hover:border-accent/50 hover:bg-accent/5 hover:text-foreground",
+              : "border-transparent text-muted-foreground hover:border-accent/50 hover:bg-accent/5 hover:text-accent-deep",
           )}
         >
           <span className="w-7 shrink-0 text-right text-[0.8rem] font-semibold tabular-nums text-accent-deep">
@@ -191,7 +191,7 @@ export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string })
         aria-label="Report contents"
         className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto"
       >
-        <h2 className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
+        <h2 className="mt-5 font-display text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
           Contents
         </h2>
         <p className="mt-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-muted-foreground">
