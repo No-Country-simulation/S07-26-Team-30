@@ -7,8 +7,8 @@ import hero from "../../app/assets/proyecto_nuevo_7.png"
 import logo from "../../../public/images/logohor.webp"
 
 const navigation = [
-  { name: 'Introduction', href: '/reports/stranded-capacity-index#01-executive-summary' },
-  { name: 'Taxonomy', href: '/reports/stranded-capacity-index#02-facility-layer' },
+  { name: 'Introduction', href: '/reports/stranded-capacity-index#1-executive-summary-introduction' },
+  { name: 'Taxonomy', href: '/reports/stranded-capacity-index#2-taxonomy-of-stranded-capacity' },
   { name: 'Methodology', href: '/reports/stranded-capacity-index#05-methodology' },
   { name: 'References', href: '/reports/stranded-capacity-index#08-references' },
 ]
@@ -21,7 +21,7 @@ export function Header() {
   const scrollToContent = () => {
     const next = sectionRef.current?.nextElementSibling as HTMLElement | null
     if (!next) return
-    const top = next.getBoundingClientRect().top + window.scrollY - 110
+    const top = next.getBoundingClientRect().top + window.scrollY
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
   }
 
