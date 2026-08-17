@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { getReportNav, resolveAllMdx } from "@/lib/mdx";
-import { LandingHero } from "@/components/layout/landing-hero";
+import { getReportNav, resolveAllMdx, resolveMdx } from "@/lib/mdx";
 import { ReportLayout } from "@/components/report";
 
 interface Props {
@@ -12,38 +11,43 @@ export async function generateMetadata({ params }: Props) {
   const [report] = slug;
   return {
     title: `PhysaFlow — ${report}`,
-    description: `Report: ${report}`,
+    description: `Report: ${slug.join("/")}`,
   };
 }
 
 export default async function ReportPage({ params }: Props) {
   const { slug } = await params;
-  const [report] = slug;
+  const [report, ...section] = slug;
+
+  const nav = await getReportNav(report);
+  const sectionSlug = section.join("/");
+
+  if (sectionSlug) {
+    const mdx = await resolveMdx(report, sectionSlug);
+    if (!mdx) notFound();
+    const { default: Content } = mdx;
+
+    return (
+      <ReportLayout nav={nav} slug={report}>
+        <article id={sectionSlug}>
+          <Content />
+        </article>
+      </ReportLayout>
+    );
+  }
 
   const sections = await resolveAllMdx(report);
   if (sections.length === 0) notFound();
 
-  const nav = await getReportNav(report);
-
   return (
-    <>
-      <LandingHero reportSlug={report} />
-      <ReportLayout nav={nav} slug={report}>
-        <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
-          {sections.map(({ slug: section, Component }, index) => (
-            <section
-              key={section}
-              id={section}
-              className={`scroll-mt-[var(--reading-offset)] first:pt-0${
-                index > 0 ? " print:break-before-page" : ""
-              }`}
-            >
-              {index > 0 && <hr className="section-divider print:hidden" />}
-              <Component />
-            </section>
-          ))}
-        </article>
-      </ReportLayout>
-    </>
+    <ReportLayout nav={nav} slug={report}>
+      <div className="space-y-16">
+        {sections.map(({ slug: sSlug, Component }) => (
+          <article key={sSlug} id={sSlug}>
+            <Component />
+          </article>
+        ))}
+      </div>
+    </ReportLayout>
   );
 }
