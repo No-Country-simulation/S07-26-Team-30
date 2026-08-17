@@ -91,7 +91,7 @@ export function ReadingProgress({
           : "pointer-events-none -translate-y-2 opacity-0",
       )}
     >
-      <div className="border-b border-white/10 bg-[#1E5A40]">
+      <div className="border-b border-white/10 bg-[#0F2B20]">
         <div className="mx-auto flex w-full max-w-[1400px] items-center justify-end gap-4 px-4 py-6 sm:justify-between sm:px-6 lg:px-8">
           <p className="m-0 hidden min-w-0 truncate text-left font-display text-lg font-normal tracking-wide text-white sm:block">
             {title}
