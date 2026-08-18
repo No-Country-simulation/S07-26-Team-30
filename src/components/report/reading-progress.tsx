@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import type { NavItem } from "@/types";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { ShareButton } from "./share-button";
 
 function readReadingOffset(): number {
@@ -97,6 +98,7 @@ export function ReadingProgress({
             {title}
           </p>
           <div className="flex shrink-0 items-center gap-5">
+            <ThemeToggle />
             <ShareButton title={title} />
             <a
               href={`/api/reports/pdf?slug=${encodeURIComponent(slug)}`}

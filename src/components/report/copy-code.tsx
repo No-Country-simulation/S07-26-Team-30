@@ -27,8 +27,8 @@ export function CopyCode({
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border/80 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-border/60 bg-[#f2ecdd] px-4 py-2">
+    <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border/60 bg-[#f2ecdd] px-4 py-2 dark:bg-[#14251e]">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-accent-deep">
           {label}
         </span>
@@ -45,7 +45,7 @@ export function CopyCode({
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre className="m-0 overflow-x-auto bg-white p-4 text-sm leading-relaxed text-foreground">
+      <pre className="m-0 overflow-x-auto bg-white p-4 text-sm leading-relaxed text-foreground dark:bg-card">
         <code>{children}</code>
       </pre>
     </div>
