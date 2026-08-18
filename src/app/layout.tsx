@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Inter } from "next/font/google";
 import "@/app/globals.css";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ChatButton } from "@/components/chatbot/chat-button";
@@ -34,14 +35,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
         className={`${sansDisplay.variable} ${inter.variable} min-h-screen antialiased`}
       >
-        <Header />
-        {children}
-        <Footer />
-        <ChatButton />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("physaflow-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}`,
+          }}
+        />
+        <ThemeProvider>
+          <Header />
+          {children}
+          <Footer />
+          <ChatButton />
+        </ThemeProvider>
       </body>
     </html>
   );

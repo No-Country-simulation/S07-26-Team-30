@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { NavItem } from "@/types";
 import { cn } from "@/lib/utils";
 import { PdfDownloadButton } from "./pdf-download-button";
@@ -44,26 +44,52 @@ function resolveTarget(item: NavItem): HTMLElement | null {
   return document.getElementById(item.slug);
 }
 
+/**
+ * State of the last index click while its smooth-scroll jump is in flight.
+ * updateActive uses it to keep the clicked section authoritative: the
+ * position loop transiently computes the section we just left while the
+ * browser animates the anchor jump.
+ */
+interface NavClickState {
+  key: string;
+  target: HTMLElement | null;
+  atY: number;
+  dir: 1 | -1;
+}
+
 export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string }) {
   const leaves = useMemo(() => flatten(items), [items]);
   const [active, setActive] = useState(leaves[0]?.slug ?? "");
   const [headingOffset] = useState(readReadingOffset);
+  const navClickRef = useRef<NavClickState | null>(null);
 
-  // Active key -> leaf index, so the highlight and the "Section X of N"
-  // counter always agree. A group shares its first child's index.
+  // Remember the clicked section so updateActive can keep it authoritative
+  // while the browser's smooth-scroll jump is still in flight.
+  const handleNavClick = (item: NavItem, key: string) => {
+    const target = resolveTarget(item);
+    const top = target?.getBoundingClientRect().top ?? Infinity;
+    navClickRef.current = {
+      key,
+      target,
+      atY: window.scrollY,
+      dir: top > headingOffset + 1 ? 1 : -1,
+    };
+    setActive(key);
+  };
+
+  // Active key -> top-level section index, so the highlight and the
+  // "Section X of N" counter always agree. A child belongs to its parent
+  // section, so 2.1/2.2/2.3 count as part of "Section 2".
   const indexByKey = useMemo(() => {
     const map = new Map<string, number>();
-    let leafIndex = 0;
-    const visit = (item: NavItem) => {
+    items.forEach((item, sectionIndex) => {
       if (item.children?.length) {
-        map.set(`group:${item.slug}`, leafIndex);
-        item.children.forEach(visit);
+        map.set(`group:${item.slug}`, sectionIndex);
+        item.children.forEach((child) => map.set(child.slug, sectionIndex));
       } else {
-        map.set(item.slug, leafIndex);
-        leafIndex += 1;
+        map.set(item.slug, sectionIndex);
       }
-    };
-    items.forEach(visit);
+    });
     return map;
   }, [items]);
 
@@ -94,11 +120,6 @@ export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string })
       const { scrollY, innerHeight } = window;
       const doc = document.documentElement;
 
-      if (innerHeight + scrollY >= doc.scrollHeight - 2) {
-        setActive(lastKey);
-        return;
-      }
-
       let current = entries[0].key;
       for (let i = 0; i < entries.length; i += 1) {
         // +1px tolerance: smooth-scroll landings can end at fractional
@@ -107,6 +128,41 @@ export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string })
           current = entries[i].key;
         }
       }
+
+      const nav = navClickRef.current;
+
+      // At the very bottom the last section may be too short to cross the
+      // reading line, so the last entry normally wins. But when the user
+      // just clicked another section and that section is still the one
+      // under the reading line, keep it: an anchor jump near the end of
+      // the page would otherwise flicker between the clicked section and
+      // the last one.
+      if (
+        innerHeight + scrollY >= doc.scrollHeight - 2 &&
+        (nav == null || current !== nav.key)
+      ) {
+        setActive(lastKey);
+        return;
+      }
+
+      // While the smooth-scroll jump to a clicked section is in flight,
+      // the position loop transiently computes the section we just left.
+      // Keep the clicked section until the target crosses the reading
+      // line (arrived), is scrolled past (passed above the viewport), or
+      // the user scrolls against the jump (cancelled).
+      if (nav != null && current !== nav.key) {
+        const top = nav.target?.getBoundingClientRect().top ?? Infinity;
+        const arrived = top <= headingOffset + 1;
+        const passedAbove = top < 0;
+        const cancelled = nav.dir === 1 ? scrollY < nav.atY : scrollY > nav.atY;
+        // A null target cannot be tracked: release immediately.
+        if (nav.target != null && !arrived && !passedAbove && !cancelled) {
+          setActive(nav.key);
+          return;
+        }
+        navClickRef.current = null;
+      }
+
       setActive(current);
     };
 
@@ -138,14 +194,14 @@ export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string })
       <li key={item.slug}>
         <a
           href={`#${item.anchor ?? item.slug}`}
-          onClick={() => setActive(item.slug)}
+          onClick={() => handleNavClick(item, item.slug)}
           aria-current={isActive ? "true" : undefined}
           className={cn(
             "-ml-px flex items-baseline gap-2 border-l-2 py-1.5 text-sm transition-[border-color,background-color,color] duration-200",
             depth > 0 ? "pl-9" : "pl-4",
             isActive
               ? "border-accent text-accent"
-              : "border-transparent text-muted-foreground hover:border-accent/50 hover:bg-accent/5 hover:text-foreground",
+              : "border-transparent text-muted-foreground hover:border-accent/50 hover:bg-accent/5 hover:text-accent-deep",
           )}
         >
           <span className="w-7 shrink-0 text-right text-[0.8rem] font-semibold tabular-nums text-accent-deep">
@@ -164,13 +220,13 @@ export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string })
       <li key={item.slug}>
         <a
           href={`#${item.anchor ?? item.slug}`}
-          onClick={() => setActive(`group:${item.slug}`)}
+          onClick={() => handleNavClick(item, `group:${item.slug}`)}
           aria-current={isActive ? "true" : undefined}
           className={cn(
             "-ml-px flex items-baseline gap-2 border-l-2 py-1.5 pl-4 text-sm transition-[border-color,color] duration-200",
             isActive
               ? "border-accent text-accent"
-              : "border-transparent text-foreground hover:border-accent/50 hover:text-accent-deep",
+              : "border-transparent text-muted-foreground hover:border-accent/50 hover:text-accent-deep",
           )}
         >
           <span className="w-7 shrink-0 text-right text-[0.8rem] font-semibold tabular-nums text-accent-deep">
@@ -191,11 +247,11 @@ export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string })
         aria-label="Report contents"
         className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto"
       >
-        <h2 className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
+        <h2 className="mt-5 font-display text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
           Contents
         </h2>
         <p className="mt-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-          Section {activeIndex + 1} of {leaves.length}
+          Section {activeIndex + 1} of {items.length}
         </p>
         <span aria-hidden="true" className="mt-4 block h-px w-10 bg-accent/70" />
         <ol className="mt-5 space-y-0.5 border-l border-border/80">

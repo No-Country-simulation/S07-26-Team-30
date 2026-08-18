@@ -6,6 +6,7 @@ import {
   Definition,
   Label,
   TableOfContents,
+  CopyCode,
   Chart,
 } from "@/components/report";
 
@@ -33,6 +34,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Definition,
     Label,
     TableOfContents,
+    CopyCode,
     Chart,
     h2: withId("h2"),
     h3: withId("h3"),

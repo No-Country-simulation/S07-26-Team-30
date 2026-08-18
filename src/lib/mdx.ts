@@ -2,7 +2,11 @@ import type { NavItem } from "@/types";
 
 const NAV: Record<string, NavItem[]> = {
   "stranded-capacity-index": [
-    { label: "1. Introduction", slug: "01-executive-summary" },
+    {
+      label: "1. Introduction",
+      slug: "01-executive-summary",
+      anchor: "1-executive-summary-introduction",
+    },
     {
       label: "2. Taxonomy",
       slug: "02-facility-layer",
