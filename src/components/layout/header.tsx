@@ -80,7 +80,7 @@ export function Header() {
           </nav>
           <div className="hidden items-center gap-4 md:flex">
             <a
-              href="/api/reports/pdf?slug=stranded-capacity-index"
+              href="https://dev.physaflow.com/login"
               className="group relative overflow-hidden rounded-lg px-5 py-2.5 text-[1rem] font-bold text-white transition-all hover:-translate-y-0.5"
               style={{
                 background: "linear-gradient(135deg, #a27e2d, #d4a94e)",
@@ -122,7 +122,7 @@ export function Header() {
                 </a>
               ))}
               <a
-                href="/api/reports/pdf?slug=stranded-capacity-index"
+                href="https://dev.physaflow.com/login"
                 onClick={() => setMobileMenuOpen(false)}
                 className="group relative mt-4 flex w-full items-center justify-center overflow-hidden rounded-lg px-5 py-2.5 text-[1rem] font-bold text-white transition-all hover:-translate-y-0.5"
                 style={{
@@ -130,7 +130,7 @@ export function Header() {
                   boxShadow: "0 4px 20px rgba(162,126,45,0.35)",
                 }}
               >
-                <span className="relative z-10">Download</span>
+                <span className="relative z-10">Platform Login</span>
                 <div
                   className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                   style={{ background: "linear-gradient(135deg, #d4a94e, #a27e2d)" }}
