@@ -281,7 +281,7 @@ function DownloadButton({ label, onDownload }: DownloadButtonProps) {
     <button
       type="button"
       onClick={onDownload}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-accent/60 hover:bg-accent/5 hover:text-foreground"
+      className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#dcd7c9] bg-[#f5f3ec] px-3 py-1.5 text-xs font-medium text-[#5c6259] transition-colors hover:border-[#c6a15b]/60 hover:bg-[#c6a15b]/5 hover:text-[#202823]"
     >
       <Download className="h-3.5 w-3.5" aria-hidden />
       {label}
@@ -387,7 +387,7 @@ export function Chart({
           {title}
         </p>
       )}
-      <div className="rounded-xl border border-border bg-card p-3 shadow-card">
+      <div className="rounded-xl border border-[#dcd7c9] bg-[#faf8f2] p-3 shadow-card">
         <div className="mb-2 flex items-center justify-end gap-2">
           <DownloadButton label="Download PNG" onDownload={downloadPng} />
           <DownloadButton label="Download SVG" onDownload={downloadSvg} />
