@@ -56,10 +56,10 @@ export function Header() {
     <>
       <header
         style={{ backgroundColor: "rgb(15, 43, 32)" }}
-        className="relative z-50 w-full transition-all duration-500"
+        className="relative z-50 w-full transition-all duration-500 print:hidden"
       >
         <div className="mx-auto flex h-[170px] w-full max-w-[1400px] items-center justify-between px-6">
-          <a href="#" className="group flex items-center gap-3">
+          <a href="https://dev.physaflow.com/" className="group flex items-center gap-3">
             <span className="sr-only">PhysaFlow</span>
             <Image
               src={logo}
@@ -87,7 +87,7 @@ export function Header() {
                 boxShadow: "0 4px 20px rgba(162,126,45,0.35)",
               }}
             >
-              <span className="relative z-10">Download</span>
+              <span className="relative z-10">Platform Login</span>
               <div
                 className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 style={{ background: "linear-gradient(135deg, #d4a94e, #a27e2d)" }}
@@ -143,7 +143,7 @@ export function Header() {
 
       <section
         ref={sectionRef}
-        className="relative h-[calc(100vh-170px)] w-full overflow-hidden"
+        className="relative h-[calc(100vh-170px)] w-full overflow-hidden print:hidden"
       >
         {/* Imagen de fondo con parallax: wrapper 140% anclado abajo para que
             nunca se vea un hueco al desplazarse */}
