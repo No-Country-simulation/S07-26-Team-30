@@ -58,7 +58,7 @@ export class StaticSearchProvider implements ContextProvider {
       const raw = await fs.readFile(fullPath, "utf-8");
 
       const title = extractTitle(raw);
-      const content = stripFrontmatter(raw);
+      const content = cleanReportContent(stripFrontmatter(raw));
 
       this.sections.push({
         slug,
@@ -178,6 +178,40 @@ function extractTitle(raw: string): string {
 
 function stripFrontmatter(raw: string): string {
   return raw.replace(/^---[\s\S]*?---\n/, "").trim();
+}
+
+// NUEVO:
+// Limpia únicamente el contenido que se utilizará como contexto del modelo.
+//
+// Importante:
+// - No modifica los archivos MDX originales.
+// - No cambia la estructura del SearchResult.
+// - No modifica el sistema de búsqueda.
+// - Elimina <br>, <br/> y <br /> para evitar que el modelo los reproduzca.
+// - Elimina otros tags HTML comunes.
+// - Normaliza espacios excesivos.
+// - Mantiene el contenido textual del reporte.
+function cleanReportContent(content: string): string {
+  return content
+    // Convierte cualquier variante de salto HTML en un espacio.
+    .replace(/<br\s*\/?>/gi, " ")
+
+    // Elimina comentarios HTML.
+    .replace(/<!--[\s\S]*?-->/g, "")
+
+    // Elimina etiquetas HTML restantes.
+    .replace(/<\/?[a-z][^>]*>/gi, "")
+
+    // Limpia espacios antes de puntuación.
+    .replace(/\s+([,.;:!?])/g, "$1")
+
+    // Evita espacios repetidos.
+    .replace(/[ \t]{2,}/g, " ")
+
+    // Evita demasiadas líneas vacías.
+    .replace(/\n{3,}/g, "\n\n")
+
+    .trim();
 }
 
 function scoreSection(section: Section, terms: string[]): number {
