@@ -303,6 +303,12 @@ export function Chart({
   const heightRef = useRef(height);
   heightRef.current = height;
 
+  // PDF mode (?pdf=1): charts render without intro animations so the print
+  // pipeline can snapshot as soon as the SVG is laid out, skipping the wait.
+  const pdfMode =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("pdf");
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -326,9 +332,16 @@ export function Chart({
           baseHeight * (nextMobile ? MOBILE_HEIGHT_SCALE : 1),
         )}px`;
         chart.setOption(
-          nextMobile
-            ? buildChartOption(optionRef.current, width)
-            : optionRef.current,
+          pdfMode
+            ? {
+                ...(nextMobile
+                  ? buildChartOption(optionRef.current, width)
+                  : optionRef.current),
+                animation: false,
+              }
+            : nextMobile
+              ? buildChartOption(optionRef.current, width)
+              : optionRef.current,
           { notMerge: true },
         );
       }

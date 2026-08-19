@@ -47,7 +47,12 @@ async function withBrowser<T>(fn: (browser: Browser) => Promise<T>): Promise<T> 
 export async function GET(request: NextRequest) {
   const slug =
     request.nextUrl.searchParams.get("slug") ?? "stranded-capacity-index";
-  const url = new URL(`/reports/${slug}`, request.nextUrl.origin).toString();
+  // pdf=1 lets client components (charts) skip intro animations and other
+  // non-essential work, so the PDF render does not wait on them.
+  const url = new URL(
+    `/reports/${slug}?pdf=1`,
+    request.nextUrl.origin,
+  ).toString();
 
   try {
     const pdf = await withBrowser(async (browser) => {
@@ -60,11 +65,17 @@ export async function GET(request: NextRequest) {
         // container with [_echarts_instance_]. Waiting for that attribute is
         // renderer-agnostic (a "figure canvas" selector would never match).
         await page
-          .waitForSelector("div[_echarts_instance_]", { timeout: 20_000 })
+          .waitForSelector("div[_echarts_instance_]", { timeout: 8_000 })
           .catch(() => {});
-        await page.evaluate(() => document.fonts.ready);
-        // Short settle so ECharts finishes its intro animations.
-        await page.waitForTimeout(600);
+        // Fonts are needed for a faithful print, but a hung font fetch must
+        // not block the whole request: cap the wait at 3s.
+        await Promise.race([
+          page.evaluate(() => document.fonts.ready),
+          new Promise((resolve) => setTimeout(resolve, 3_000)),
+        ]);
+        // Charts render instantly in pdf mode (animations disabled), so a
+        // short settle is enough for SVG layout to finalize.
+        await page.waitForTimeout(150);
 
         return await page.pdf({
           printBackground: true,
@@ -87,6 +98,10 @@ export async function GET(request: NextRequest) {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="physaflow-${slug}.pdf"`,
+        // The PDF is deterministic per slug + deploy. Cache it at the CDN
+        // edge (Vercel) so repeat downloads are served instantly; stale-while-
+        // revalidate keeps serving the old copy while a new deploy re-renders.
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     });
   } catch (error) {
