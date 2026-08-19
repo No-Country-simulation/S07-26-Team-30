@@ -63,10 +63,30 @@ export class StaticSearchProvider implements ContextProvider {
   async getRelevantContext(query: string): Promise<SearchResult[]> {
     await this.ensureLoaded();
 
-    const terms = query
+    let terms = query
       .toLowerCase()
       .split(/\W+/)
       .filter((t) => t.length > 2);
+
+    // BUG-AI-003 FIX: Diccionario ligero de equivalencias/sinónimos multilingüe
+    // para mapear términos en español al contenido en inglés del reporte.
+    const queryLower = query.toLowerCase();
+    const synonymMap: Record<string, string[]> = {
+      introducc: ["introduction", "executive", "summary", "overview"],
+      resumen: ["summary", "executive", "overview"],
+      metodolog: ["methodology", "approach", "methods"],
+      infraestructura: ["facility", "infrastructure", "layer"],
+      instalacion: ["facility", "infrastructure"],
+      equipo: ["equipment", "layer", "it"],
+      capacidad: ["capacity", "stranded", "index"],
+      varada: ["stranded", "capacity"],
+    };
+
+    for (const [key, synonyms] of Object.entries(synonymMap)) {
+      if (queryLower.includes(key)) {
+        terms = [...terms, ...synonyms];
+      }
+    }
 
     // Si no conseguimos extraer términos útiles de la pregunta,
     // no enviamos contenido irrelevante al modelo.
