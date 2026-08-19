@@ -47,6 +47,26 @@ Important:
 - The original report structure must never force you to use a table.
 - If the user asks for a summary, prefer sections and bullet points over tables.`;
 
+export function buildSystemPrompt(language: "es" | "en"): string {
+  const languageInstruction =
+    language === "es"
+      ? `Response language:
+- ALWAYS respond in Spanish.
+- The user's input language must NOT change the response language.
+- Even if the user asks the question in English or another language, respond in Spanish.
+- The selected language is the source of truth for the response language.`
+      : `Response language:
+- ALWAYS respond in English.
+- The user's input language must NOT change the response language.
+- Even if the user asks the question in Spanish or another language, respond in English.
+- The selected language is the source of truth for the response language.`;
+
+  return `${SYSTEM_PROMPT}
+
+${languageInstruction}`;
+}
+
+
 export function buildContext(results: SearchResult[]): string {
   return results
     .map(
