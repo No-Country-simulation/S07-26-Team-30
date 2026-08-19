@@ -7,16 +7,6 @@
  * stays the same.
  */
 
-// NUEVO:
-// Antes el provider devolvía directamente un string con el contexto.
-// Ahora definimos un resultado estructurado.
-//
-// ¿Por qué?
-// Porque el buscador debería preocuparse por ENCONTRAR información,
-// no por decidir cómo presentársela al modelo.
-//
-// Más adelante, prompts.ts / buildContext() podrá recibir estos resultados
-// y encargarse de convertirlos en el formato que Groq necesita.
 export interface SearchResult {
   slug: string;
   title: string;
@@ -58,7 +48,7 @@ export class StaticSearchProvider implements ContextProvider {
       const raw = await fs.readFile(fullPath, "utf-8");
 
       const title = extractTitle(raw);
-      const content = cleanReportContent(stripFrontmatter(raw));
+      const content = stripFrontmatter(raw);
 
       this.sections.push({
         slug,
@@ -78,13 +68,8 @@ export class StaticSearchProvider implements ContextProvider {
       .split(/\W+/)
       .filter((t) => t.length > 2);
 
-    // NUEVO:
     // Si no conseguimos extraer términos útiles de la pregunta,
-    // devolvemos un array vacío.
-    //
-    // Antes devolvíamos las primeras 3 secciones del reporte.
-    // Eso podía provocar que el modelo recibiera información que
-    // realmente no tenía relación con la pregunta.
+    // no enviamos contenido irrelevante al modelo.
     if (terms.length === 0) {
       return [];
     }
@@ -95,65 +80,33 @@ export class StaticSearchProvider implements ContextProvider {
         score: scoreSection(section, terms),
       }))
 
-      // NUEVO:
-      // Eliminamos las secciones que no tuvieron ninguna coincidencia.
-      //
-      // De esta manera, una pregunta que no tenga relación con el reporte
-      // no termina recibiendo contenido simplemente porque "necesitamos"
-      // devolver tres resultados.
+      // Eliminamos las secciones sin coincidencias.
       .filter((result) => result.score > 0)
 
-      // Mantenemos la lógica que ya teníamos:
-      // las secciones con mayor puntuación aparecen primero.
+      // Las secciones más relevantes aparecen primero.
       .sort((a, b) => b.score - a.score)
 
-      // También mantenemos el límite de 3 resultados.
-      //
-      // Esto evita enviar todo el reporte al modelo y ayuda a mantener
-      // el contexto enfocado en la pregunta actual.
+      // Limitamos el contexto a las 3 secciones más relevantes.
       .slice(0, 3);
 
-    // NUEVO:
-    // Si ninguna sección coincide con la consulta, devolvemos [].
-    //
-    // Esto será importante para que la capa que utiliza este provider
-    // pueda detectar fácilmente:
-    //
-    // "No encontré información relevante en el reporte."
+    // Si no encontramos información relevante, devolvemos un array vacío.
     if (scored.length === 0) {
       return [];
     }
 
-    // NUEVO:
-    // En lugar de transformar cada resultado en texto acá,
-    // devolvemos sus datos estructurados.
-    //
-    // Por ejemplo:
-    //
-    // {
-    //   slug: "facility-layer",
-    //   title: "Layer 1: Facility",
-    //   content: "...",
-    //   score: 17
-    // }
-    //
-    // La presentación de estos datos será responsabilidad de buildContext().
     return scored.map(({ section, score }) => ({
       slug: section.slug,
       title: section.title,
-      content: section.content,
+
+      // Limpiamos HTML/MDX problemático antes de enviarlo al modelo.
+      // Esto evita que el modelo copie <br>, <div>, etc.
+      content: cleanContent(section.content),
+
       score,
     }));
   }
 
-  // NUEVO:
   // Devuelve secciones específicas del reporte para acciones predefinidas.
-  //
-  // A diferencia de getRelevantContext(), este método no realiza
-  // búsqueda por palabras clave ni limita los resultados a 3 secciones.
-  //
-  // Esto permite que acciones como "summary", "methodology" o "taxonomy"
-  // utilicen directamente las secciones que corresponden a cada acción.
   async getSectionContext(slugs: string[]): Promise<SearchResult[]> {
     await this.ensureLoaded();
 
@@ -163,7 +116,7 @@ export class StaticSearchProvider implements ContextProvider {
       .map((section) => ({
         slug: section.slug,
         title: section.title,
-        content: section.content,
+        content: cleanContent(section.content),
         score: 1,
       }));
   }
@@ -180,35 +133,31 @@ function stripFrontmatter(raw: string): string {
   return raw.replace(/^---[\s\S]*?---\n/, "").trim();
 }
 
-// NUEVO:
-// Limpia únicamente el contenido que se utilizará como contexto del modelo.
-//
-// Importante:
-// - No modifica los archivos MDX originales.
-// - No cambia la estructura del SearchResult.
-// - No modifica el sistema de búsqueda.
-// - Elimina <br>, <br/> y <br /> para evitar que el modelo los reproduzca.
-// - Elimina otros tags HTML comunes.
-// - Normaliza espacios excesivos.
-// - Mantiene el contenido textual del reporte.
-function cleanReportContent(content: string): string {
+/**
+ * Limpia contenido MDX/HTML antes de enviarlo al modelo.
+ *
+ * Importante:
+ * No modifica los archivos originales del reporte.
+ * Solamente transforma el texto que se utiliza como contexto del chatbot.
+ */
+function cleanContent(content: string): string {
   return content
-    // Convierte cualquier variante de salto HTML en un espacio.
-    .replace(/<br\s*\/?>/gi, " ")
+    // Convierte saltos HTML en saltos de línea normales.
+    .replace(/<br\s*\/?>/gi, "\n")
 
-    // Elimina comentarios HTML.
-    .replace(/<!--[\s\S]*?-->/g, "")
+    // Elimina etiquetas HTML comunes.
+    .replace(/<\/?(div|p|span|section|article)[^>]*>/gi, "")
 
-    // Elimina etiquetas HTML restantes.
-    .replace(/<\/?[a-z][^>]*>/gi, "")
+    // Elimina cualquier otra etiqueta HTML simple.
+    .replace(/<[^>]+>/g, "")
 
-    // Limpia espacios antes de puntuación.
-    .replace(/\s+([,.;:!?])/g, "$1")
+    // Limpia entidades HTML comunes.
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
 
-    // Evita espacios repetidos.
-    .replace(/[ \t]{2,}/g, " ")
-
-    // Evita demasiadas líneas vacías.
+    // Evita demasiados saltos de línea consecutivos.
     .replace(/\n{3,}/g, "\n\n")
 
     .trim();
@@ -226,11 +175,6 @@ function scoreSection(section: Section, terms: string[]): number {
   }
 
   for (const term of terms) {
-    // NUEVO:
-    // Escapamos el término antes de utilizarlo dentro de RegExp.
-    //
-    // Esto hace que la búsqueda trate la palabra del usuario como texto
-    // literal y no como una expresión regular.
     const escapedTerm = escapeRegExp(term);
     const re = new RegExp(escapedTerm, "gi");
     const matches = body.match(re);
@@ -241,9 +185,6 @@ function scoreSection(section: Section, terms: string[]): number {
   return score;
 }
 
-// NUEVO:
-// Escapa caracteres especiales para poder utilizarlos de forma segura
-// dentro de una expresión regular.
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

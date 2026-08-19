@@ -173,6 +173,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
             content: m.content,
           })),
           action: action.id,
+          language,
         }),
       });
 
@@ -256,6 +257,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
             role: m.role,
             content: m.content,
           })),
+          language,
         }),
       });
 

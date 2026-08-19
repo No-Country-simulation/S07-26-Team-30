@@ -1,8 +1,11 @@
 import { streamText } from "ai";
 import { groq } from "@ai-sdk/groq";
 import { StaticSearchProvider } from "@/lib/context-provider";
-import { SYSTEM_PROMPT, buildContext } from "@/lib/prompts";
-import { getChatbotAction, type ChatbotActionId } from "@/lib/chatbot-actions";
+import { buildSystemPrompt, buildContext } from "@/lib/prompts";
+import {
+  getChatbotAction,
+  type ChatbotActionId,
+} from "@/lib/chatbot-actions";
 import path from "node:path";
 
 const reportDir = path.join(
@@ -23,12 +26,23 @@ const provider = new StaticSearchProvider(reportDir, {
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, action } = await req.json();
+  const { messages, action, language } = await req.json();
 
   const lastMessage = messages[messages.length - 1];
 
   const query =
     typeof lastMessage?.content === "string" ? lastMessage.content : "";
+
+  // -------------------------------------------------------------------------
+  // IDIOMA SELECCIONADO
+  // -------------------------------------------------------------------------
+  // El idioma seleccionado en el chatbot tiene prioridad sobre el idioma
+  // utilizado por el usuario al escribir la consulta.
+  //
+  // Si por alguna razón el frontend no envía un idioma válido, se utiliza
+  // English como valor por defecto para mantener el comportamiento anterior.
+  const selectedLanguage: "es" | "en" =
+    language === "es" || language === "en" ? language : "en";
 
   let context = "";
 
@@ -60,6 +74,7 @@ export async function POST(req: Request) {
       console.warn(
         `No se encontró contexto relevante para la consulta: "${query}"`,
       );
+
       return new Response(
         JSON.stringify({
           error:
@@ -78,7 +93,10 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: groq("openai/gpt-oss-120b"),
-      system: `${SYSTEM_PROMPT}\\n\\nReport context:\\n${context}`,
+      system: `${buildSystemPrompt(selectedLanguage)}
+
+Report context:
+${context}`,
       messages,
     });
 
@@ -89,6 +107,7 @@ export async function POST(req: Request) {
       stack: error.stack,
       query: query,
       action: action,
+      language: language,
       // Considerar añadir un identificador único para la solicitud si está disponible
     });
 
