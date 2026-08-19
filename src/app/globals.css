@@ -583,3 +583,27 @@
     font-size: 0.75rem;
   }
 }
+
+/* Chatbot animations (scoped, respects prefers-reduced-motion via the global rule) */
+@keyframes chat-pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes chat-message-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes chat-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+@keyframes chat-pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5); }
+  50% { box-shadow: 0 0 0 4px rgba(74, 222, 128, 0); }
+}
+/* Note: chat-pop-in uses fill-mode backwards (not both) so the finished
+   animation releases `transform` and hover/active scale utilities still work. */
+.chat-pop-in { animation: chat-pop-in 0.2s ease-out backwards; }
+.chat-message-in { animation: chat-message-in 0.18s ease-out both; }
+.chat-dot { animation: chat-dot 1.1s ease-in-out infinite; }
+.chat-pulse-dot { animation: chat-pulse-dot 2s ease-in-out infinite; }

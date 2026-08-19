@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, Send, Trash2, User, Bot } from "lucide-react";
+import Image from "next/image";
+import {
+  X,
+  Send,
+  Trash2,
+  User,
+  FileText,
+  FlaskConical,
+  FolderTree,
+  Target,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "@/types";
@@ -12,6 +22,7 @@ import {
 import {
   chatbotActions,
   type ChatbotAction,
+  type ChatbotActionId,
 } from "@/lib/chatbot-actions";
 import clsx from "clsx";
 
@@ -32,12 +43,36 @@ function normalizeMarkdown(content: string): string {
 // Componente simple para el indicador de escritura
 function TypingIndicator() {
   return (
-    <div className="flex items-center space-x-1 self-start rounded-lg bg-muted px-3 py-2 text-sm">
-      <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 delay-0" />
-      <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 delay-100" />
-      <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 delay-200" />
+    <div className="flex items-center space-x-1 self-start rounded-2xl rounded-bl-md border bg-muted px-3.5 py-3">
+      <div
+        className="chat-dot h-1.5 w-1.5 rounded-full bg-accent"
+        style={{ animationDelay: "0ms" }}
+      />
+      <div
+        className="chat-dot h-1.5 w-1.5 rounded-full bg-accent"
+        style={{ animationDelay: "150ms" }}
+      />
+      <div
+        className="chat-dot h-1.5 w-1.5 rounded-full bg-accent"
+        style={{ animationDelay: "300ms" }}
+      />
     </div>
   );
+}
+
+function getActionIcon(actionId: ChatbotActionId) {
+  switch (actionId) {
+    case "summary":
+      return FileText;
+    case "methodology":
+      return FlaskConical;
+    case "taxonomy":
+      return FolderTree;
+    case "conclusions":
+      return Target;
+    default:
+      return FileText;
+  }
 }
 
 export function ChatDialog({ open, onClose }: ChatDialogProps) {
@@ -48,14 +83,32 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null,
   );
+  const [nearBottom, setNearBottom] = useState(true);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const questions = predefinedQuestions[language];
 
   useEffect(() => {
+    if (open) {
+      inputRef.current?.focus();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !nearBottom) return;
+
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, open, nearBottom]);
+
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    setNearBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 120);
+  }
 
   function handleClearChat() {
     if (loading) return;
@@ -251,23 +304,56 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
     }
   }
 
-  if (!open) return null;
+  const dialogTitle =
+    language === "es" ? "Asistente de PhysaFlow" : "PhysaFlow Assistant";
 
   return (
-    <div className="fixed bottom-24 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden rounded-xl border bg-background shadow-2xl sm:right-6 md:max-w-lg lg:max-w-xl">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <span className="text-sm font-semibold">
-          {language === "es"
-            ? "Asistente de PhysaFlow"
-            : "PhysaFlow Assistant"}
-        </span>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={dialogTitle}
+      aria-hidden={!open}
+      inert={!open}
+      style={{ transformOrigin: "bottom right" }}
+      className={clsx(
+        "fixed bottom-24 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl transition-all duration-200 ease-out sm:right-6 md:max-w-lg lg:max-w-xl",
+        open
+          ? "opacity-100 scale-100 translate-y-0"
+          : "pointer-events-none opacity-0 scale-95 translate-y-2",
+      )}
+    >
+      <div className="flex items-center justify-between border-b border-black/10 bg-gradient-to-r from-[#0F2B20] to-[#143D2C] px-4 py-3 dark:border-white/10 dark:from-[#143D2C] dark:to-[#1A3A2E]">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full">
+            <Image
+              src="/images/icon-notext.webp"
+              alt=""
+              width={28}
+              height={28}
+              className="size-full object-cover"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <p className="m-0 truncate text-sm font-semibold text-white">
+              {dialogTitle}
+            </p>
+
+            <div className="flex items-center gap-1.5">
+              <span className="chat-pulse-dot h-1.5 w-1.5 rounded-full bg-green-400" />
+              <span className="text-[10px] text-white/70">
+                {language === "es" ? "En línea" : "Online"}
+              </span>
+            </div>
+          </div>
+        </div>
 
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={handleClearChat}
             disabled={loading || messages.length === 0}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             aria-label={
               language === "es" ? "Limpiar chat" : "Clear chat"
             }
@@ -284,17 +370,24 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
             aria-label={
               language === "es" ? "Cerrar chat" : "Close chat"
             }
-            className="rounded-md p-1.5 transition-colors hover:bg-muted"
+            className="rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
           >
             <X size={18} />
           </button>
         </div>
       </div>
 
-      <div className="flex h-80 min-w-0 flex-col gap-3 overflow-y-auto p-4 md:h-96">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex h-80 min-w-0 flex-col gap-3 overflow-y-auto p-4 scroll-smooth [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin] md:h-96"
+      >
         {messages.length === 0 && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
+            <div
+              className="chat-message-in flex items-center justify-between gap-3"
+              style={{ animationDelay: "0ms" }}
+            >
               <span className="text-xs font-medium text-muted-foreground">
                 {language === "es" ? "Idioma" : "Language"}
               </span>
@@ -316,7 +409,10 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
               </select>
             </div>
 
-            <div className="space-y-2">
+            <div
+              className="chat-message-in space-y-2"
+              style={{ animationDelay: "80ms" }}
+            >
               <p className="text-xs font-medium text-muted-foreground">
                 {language === "es"
                   ? "Preguntas sugeridas"
@@ -329,37 +425,50 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
                   type="button"
                   onClick={() => handlePredefinedQuestion(question)}
                   disabled={loading}
-                  className="w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-all duration-150 hover:border-accent/60 hover:bg-accent-soft hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {question.question}
                 </button>
               ))}
             </div>
 
-            <div className="space-y-2 border-t pt-4">
+            <div
+              className="chat-message-in space-y-2 border-t pt-4"
+              style={{ animationDelay: "160ms" }}
+            >
               <p className="text-xs font-medium text-muted-foreground">
                 {language === "es"
                   ? "Explorar el reporte"
                   : "Explore the report"}
               </p>
 
-              {chatbotActions.map((action) => (
-                <button
-                  key={action.id}
-                  type="button"
-                  onClick={() => handleAction(action)}
-                  disabled={loading}
-                  className="w-full rounded-lg border px-3 py-2 text-left transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <span className="block text-sm font-medium">
-                    {action.label[language]}
-                  </span>
+              {chatbotActions.map((action) => {
+                const Icon = getActionIcon(action.id);
 
-                  <span className="mt-1 block text-xs text-muted-foreground">
-                    {action.description[language]}
-                  </span>
-                </button>
-              ))}
+                return (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={() => handleAction(action)}
+                    disabled={loading}
+                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-lift disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-deep">
+                        <Icon size={16} />
+                      </span>
+
+                      <span className="text-sm font-medium">
+                        {action.label[language].replace(/^\S+\s/, "")}
+                      </span>
+                    </span>
+
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {action.description[language]}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -368,27 +477,30 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
           <div
             key={msg.id}
             className={clsx(
-              "flex min-w-0 items-start gap-3",
+              "chat-message-in flex min-w-0 items-start gap-3",
               msg.role === "user"
                 ? "justify-end"
                 : "justify-start",
             )}
           >
             {msg.role === "assistant" && (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                <Bot
-                  size={18}
-                  className="text-muted-foreground"
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                <Image
+                  src="/images/icon-notext.webp"
+                  alt="PhysaFlow"
+                  width={32}
+                  height={32}
+                  className="size-full object-cover"
                 />
               </div>
             )}
 
             <div
               className={clsx(
-                "min-w-0 max-w-[calc(100%-2.75rem)] rounded-lg px-3 py-2 text-sm sm:max-w-[85%]",
+                "min-w-0 max-w-[calc(100%-2.75rem)] rounded-2xl px-3 py-2 text-sm sm:max-w-[85%]",
                 msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted",
+                  ? "rounded-br-md bg-[#1F4A35] text-white dark:bg-[#24513E]"
+                  : "rounded-bl-md bg-muted",
               )}
             >
               {msg.role === "assistant" ? (
@@ -450,7 +562,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
                 className={clsx(
                   "mt-2 text-right text-xs",
                   msg.role === "user"
-                    ? "text-primary-foreground/70"
+                    ? "text-white/70"
                     : "text-muted-foreground",
                 )}
               >
@@ -462,7 +574,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
             </div>
 
             {msg.role === "user" && (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
                 <User size={18} />
               </div>
             )}
@@ -470,11 +582,14 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
         ))}
 
         {loading && !streamingMessageId && messages.length > 0 && (
-          <div className="flex items-start justify-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-              <Bot
-                size={18}
-                className="text-muted-foreground"
+          <div className="chat-message-in flex items-start justify-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+              <Image
+                src="/images/icon-notext.webp"
+                alt="PhysaFlow"
+                width={32}
+                height={32}
+                className="size-full object-cover"
               />
             </div>
 
@@ -490,6 +605,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
         className="flex items-center gap-2 border-t p-3"
       >
         <input
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={
@@ -497,13 +613,13 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
               ? "Preguntá sobre el reporte…"
               : "Ask about the report…"
           }
-          className="min-w-0 flex-1 rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="min-w-0 flex-1 rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:ring-2 focus:ring-accent/60"
         />
 
         <button
           type="submit"
           disabled={loading}
-          className="shrink-0 rounded-md bg-primary p-2 text-primary-foreground disabled:opacity-50"
+          className="shrink-0 rounded-xl bg-[#0F2B20] p-2.5 text-white transition-all duration-150 hover:scale-105 hover:bg-[#1F4A35] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90"
           aria-label={language === "es" ? "Enviar" : "Send"}
         >
           <Send size={16} />
