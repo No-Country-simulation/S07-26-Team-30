@@ -33,14 +33,6 @@ export async function POST(req: Request) {
   const query =
     typeof lastMessage?.content === "string" ? lastMessage.content : "";
 
-  // -------------------------------------------------------------------------
-  // IDIOMA SELECCIONADO
-  // -------------------------------------------------------------------------
-  // El idioma seleccionado en el chatbot tiene prioridad sobre el idioma
-  // utilizado por el usuario al escribir la consulta.
-  //
-  // Si por alguna razón el frontend no envía un idioma válido, se utiliza
-  // English como valor por defecto para mantener el comportamiento anterior.
   const selectedLanguage: "es" | "en" =
     language === "es" || language === "en" ? language : "en";
 
@@ -65,7 +57,33 @@ export async function POST(req: Request) {
     // NORMAL QUESTION / RAG
     // -------------------------------------------------------------------------
     if (!context) {
-      const searchResults = await provider.getRelevantContext(query);
+      let searchResults = await provider.getRelevantContext(query);
+
+      // Si no hay resultados (ej. consulta en español vs reporte en inglés),
+      // intentamos una recuperación semántica básica basada en palabras clave.
+      if (searchResults.length === 0) {
+        const lowerQuery = query.toLowerCase();
+        let fallbackSlugs: string[] = [];
+
+        if (lowerQuery.includes("introducc") || lowerQuery.includes("resumen")) {
+          fallbackSlugs = ["executive-summary"];
+        } else if (lowerQuery.includes("metodolog")) {
+          fallbackSlugs = ["methodology"];
+        } else if (
+          lowerQuery.includes("instalacion") ||
+          lowerQuery.includes("facility") ||
+          lowerQuery.includes("infraestructura")
+        ) {
+          fallbackSlugs = ["facility-layer"];
+        } else if (lowerQuery.includes("it") || lowerQuery.includes("equipo")) {
+          fallbackSlugs = ["it-layer"];
+        }
+
+        if (fallbackSlugs.length > 0) {
+          searchResults = await provider.getSectionContext(fallbackSlugs);
+        }
+      }
+
       context = buildContext(searchResults);
     }
 
@@ -78,7 +96,9 @@ export async function POST(req: Request) {
       return new Response(
         JSON.stringify({
           error:
-            "Lo siento, no se encontró información relevante para su pregunta en el reporte.",
+            selectedLanguage === "es"
+              ? "Lo siento, no se encontró información relevante para su pregunta en el reporte."
+              : "I'm sorry, no relevant information was found for your question in the report.",
         }),
         {
           status: 404,
@@ -108,10 +128,8 @@ ${context}`,
       query: query,
       action: action,
       language: language,
-      // Considerar añadir un identificador único para la solicitud si está disponible
     });
 
-    // Manejo de errores específicos de Groq/API
     if (error.status === 429) {
       return new Response(
         JSON.stringify({
@@ -135,7 +153,6 @@ ${context}`,
         },
       );
     } else if (error.status >= 400) {
-      // Otros errores de cliente que no sean 429
       return new Response(
         JSON.stringify({
           error:
@@ -147,7 +164,6 @@ ${context}`,
         },
       );
     } else {
-      // Errores inesperados
       return new Response(
         JSON.stringify({
           error: "Ocurrió un error inesperado. Por favor, inténtelo de nuevo.",
