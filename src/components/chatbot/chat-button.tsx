@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import clsx from "clsx";
@@ -8,11 +8,20 @@ import { ChatDialog } from "./chat-dialog";
 
 export function ChatButton() {
   const [open, setOpen] = useState(false);
-  // Aparece en cada carga del sitio; se oculta al abrir el chat o con la X.
-  // No se persiste: al refrescar (F5) vuelve a mostrarse.
-  const [showTip, setShowTip] = useState(true);
+  // Aparece con 1 segundo de delay en cada carga del sitio; se oculta al
+  // abrir el chat o con la X. No se persiste: al refrescar (F5) vuelve.
+  const [showTip, setShowTip] = useState(false);
+  const dismissedRef = useRef(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!dismissedRef.current) setShowTip(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   function dismissTip() {
+    dismissedRef.current = true;
     setShowTip(false);
   }
 
