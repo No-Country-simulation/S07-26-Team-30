@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = { title: "Page Not Found" };
 
 export default function NotFound() {
@@ -12,7 +14,7 @@ export default function NotFound() {
       <p className="mt-4 max-w-md text-muted-foreground">
         The page you are looking for does not exist or has moved.
       </p>
-      <a
+      <Link
         href="/reports/stranded-capacity-index"
         className="mt-8 rounded-lg px-5 py-2.5 text-[1rem] font-bold text-white transition-all hover:-translate-y-0.5"
         style={{
@@ -21,7 +23,7 @@ export default function NotFound() {
         }}
       >
         Back to the Report
-      </a>
+      </Link>
     </main>
   );
 }

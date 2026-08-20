@@ -10,6 +10,8 @@ const GOLD = "#d4a94e";
 // Carga DM Sans (la fuente del sitio) desde Google Fonts en try/catch: si el
 // fetch falla (build sin red, rate limit, etc.) devuelve null y la imagen usa
 // la fuente del sistema. Nunca rompe la ruta.
+// El UA legacy hace que Google sirva TTF en vez de woff2: next/og (opentype.js)
+// no puede parsear woff2 ("Unsupported OpenType signature wOF2").
 async function loadFont(weight: number): Promise<ArrayBuffer | null> {
   try {
     const css = await fetch(
@@ -17,12 +19,12 @@ async function loadFont(weight: number): Promise<ArrayBuffer | null> {
       {
         headers: {
           "user-agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1",
         },
       },
     ).then((res) => res.text());
 
-    const url = css.match(/https:\/\/fonts\.gstatic\.com\/[^)]+\.woff2/)?.[0];
+    const url = css.match(/https:\/\/fonts\.gstatic\.com\/[^)]+/)?.[0];
     if (!url) return null;
 
     return await fetch(url).then((res) => res.arrayBuffer());
@@ -44,7 +46,7 @@ export default async function Image() {
     [700, bold],
   ] as const;
   const fonts = fontEntries.flatMap(([weight, data]) =>
-    data ? [{ name: "DM Sans", data, weight, style: "normal" }] : [],
+    data ? [{ name: "DM Sans", data, weight, style: "normal" as const }] : [],
   );
 
   return new ImageResponse(
