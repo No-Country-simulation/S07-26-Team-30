@@ -16,7 +16,7 @@ interface Props {
 
 const REPORT_NAME = "stranded-capacity-index";
 const REPORT_TITLE = "Stranded Capacity Index";
-const REPORT_URL = "https://physaflow.com";
+const REPORT_URL = "https://dev.physaflow.com";
 const REPORT_DESCRIPTION =
   "An industry reference report on stranded capacity in AI data centers — taxonomy, methodology and benchmarks.";
 

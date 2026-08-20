@@ -21,7 +21,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://physaflow.com"),
+  metadataBase: new URL("https://dev.physaflow.com"),
   title: {
     default: "PhysaFlow — Stranded Capacity Index Report",
     template: "%s | PhysaFlow",
@@ -74,8 +74,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "PhysaFlow",
-              url: "https://physaflow.com",
-              logo: "https://physaflow.com/images/logohor.webp",
+              url: "https://dev.physaflow.com",
+              logo: "https://dev.physaflow.com/images/logohor.webp",
             }),
           }}
         />

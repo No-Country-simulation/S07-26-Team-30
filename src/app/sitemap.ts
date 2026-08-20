@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getReportSections } from "@/lib/mdx";
 
-const BASE_URL = "https://physaflow.com";
+const BASE_URL = "https://dev.physaflow.com";
 const REPORT_NAME = "stranded-capacity-index";
 
 export default function sitemap(): MetadataRoute.Sitemap {
