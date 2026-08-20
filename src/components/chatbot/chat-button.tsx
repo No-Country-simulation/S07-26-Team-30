@@ -80,7 +80,6 @@ export function ChatButton() {
 
       <ChatDialog
         open={open}
-        onClose={() => setOpen(false)}
         onMinimize={() => setOpen(false)}
       />
     </>

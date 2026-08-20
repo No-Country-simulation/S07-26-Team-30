@@ -2,14 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Send, Trash2, User, Minimize2 } from "lucide-react";
+import { Send, Trash2, User, Minimize2 } from "lucide-react";
 import type { ChatMessage } from "@/types";
 import { predefinedQuestions } from "@/lib/predefined-questions";
 import clsx from "clsx";
 
 interface ChatDialogProps {
   open: boolean;
-  onClose: () => void;
   onMinimize?: () => void;
 }
 
@@ -100,7 +99,6 @@ function TypingIndicator() {
 
 export function ChatDialog({
   open,
-  onClose,
   onMinimize,
 }: ChatDialogProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -528,15 +526,6 @@ export function ChatDialog({
             className="cursor-pointer rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
           >
             <Minimize2 size={17} />
-          </button>
-
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close chat"
-            className="cursor-pointer rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
-          >
-            <X size={18} />
           </button>
         </div>
       </div>
