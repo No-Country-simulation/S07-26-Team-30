@@ -8,7 +8,7 @@
 
 import type { SearchResult } from "@/lib/context-provider";
 
-export const SYSTEM_PROMPT = `You are the conversational assistant for the PhysaFlow "Stranded Capacity Index" report.
+const SYSTEM_PROMPT = `You are the conversational assistant for the PhysaFlow "Stranded Capacity Index" report.
 
 Answer questions naturally and helpfully, as if you were explaining the report to someone sitting next to you.
 

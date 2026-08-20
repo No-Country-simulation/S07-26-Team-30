@@ -1,14 +1,6 @@
 import type { MDXComponents } from "mdx/types";
 import { slugify } from "@/lib/utils";
-import {
-  Figure,
-  Blockquote,
-  Definition,
-  Label,
-  TableOfContents,
-  CopyCode,
-  Chart,
-} from "@/components/report";
+import { Label, CopyCode, Chart } from "@/components/report";
 
 function headingId(children: React.ReactNode): string | undefined {
   const text = Array.isArray(children)
@@ -29,11 +21,7 @@ const withId = (Tag: "h2" | "h3" | "h4") => {
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
-    Figure,
-    Blockquote,
-    Definition,
     Label,
-    TableOfContents,
     CopyCode,
     Chart,
     h2: withId("h2"),

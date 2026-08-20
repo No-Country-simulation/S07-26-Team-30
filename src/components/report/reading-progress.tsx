@@ -3,19 +3,9 @@
 import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import type { NavItem } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, readReadingOffset } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { ShareButton } from "./share-button";
-
-function readReadingOffset(): number {
-  if (typeof window === "undefined") return 112;
-  const raw = getComputedStyle(document.documentElement)
-    .getPropertyValue("--reading-offset")
-    .trim();
-  const n = parseFloat(raw);
-  if (!Number.isFinite(n)) return 112;
-  return raw.endsWith("rem") ? n * 16 : n;
-}
 
 export function ReadingProgress({
   items,

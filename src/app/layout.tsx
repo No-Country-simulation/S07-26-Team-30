@@ -34,14 +34,6 @@ title: {
     siteName: "PhysaFlow",
     type: "website",
     locale: "en_US",
-    images: [
-      {
-        url: "/opengraph-image.png",
-        width: 1200,
-        height: 630,
-        alt: "PhysaFlow Stranded Capacity Index Report",
-      },
-    ],
   },
   twitter: { card: "summary_large_image" },
   icons: {

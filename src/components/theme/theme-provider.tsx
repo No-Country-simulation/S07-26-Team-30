@@ -10,9 +10,9 @@ import {
   type ReactNode,
 } from "react";
 
-export type Theme = "light" | "dark";
+type Theme = "light" | "dark";
 
-export const STORAGE_KEY = "physaflow-theme";
+const STORAGE_KEY = "physaflow-theme";
 
 interface ThemeContextValue {
   theme: Theme;

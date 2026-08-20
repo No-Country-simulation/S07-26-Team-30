@@ -4,39 +4,27 @@ import { useEffect, useRef } from "react";
 import * as echarts from "echarts/core";
 import {
   BarChart,
-  FunnelChart,
-  GaugeChart,
   HeatmapChart,
   LineChart,
-  PieChart,
   RadarChart,
-  SankeyChart,
   ScatterChart,
-  TreemapChart,
   type BarSeriesOption,
-  type FunnelSeriesOption,
-  type GaugeSeriesOption,
   type HeatmapSeriesOption,
   type LineSeriesOption,
-  type PieSeriesOption,
   type RadarSeriesOption,
-  type SankeySeriesOption,
   type ScatterSeriesOption,
-  type TreemapSeriesOption,
 } from "echarts/charts";
 import {
   GraphicComponent,
   GridComponent,
   LegendComponent,
   RadarComponent,
-  TitleComponent,
   TooltipComponent,
   VisualMapComponent,
   type GraphicComponentOption,
   type GridComponentOption,
   type LegendComponentOption,
   type RadarComponentOption,
-  type TitleComponentOption,
   type TooltipComponentOption,
   type VisualMapComponentOption,
 } from "echarts/components";
@@ -47,13 +35,8 @@ import { cn, slugify } from "@/lib/utils";
 echarts.use([
   BarChart,
   LineChart,
-  PieChart,
   RadarChart,
-  GaugeChart,
-  SankeyChart,
   ScatterChart,
-  FunnelChart,
-  TreemapChart,
   HeatmapChart,
   GridComponent,
   GraphicComponent,
@@ -61,7 +44,6 @@ echarts.use([
   VisualMapComponent,
   TooltipComponent,
   LegendComponent,
-  TitleComponent,
   SVGRenderer,
   CanvasRenderer,
 ]);
@@ -69,13 +51,8 @@ echarts.use([
 export type ChartOption = echarts.ComposeOption<
   | BarSeriesOption
   | LineSeriesOption
-  | PieSeriesOption
   | RadarSeriesOption
-  | GaugeSeriesOption
-  | SankeySeriesOption
   | ScatterSeriesOption
-  | FunnelSeriesOption
-  | TreemapSeriesOption
   | HeatmapSeriesOption
   | GridComponentOption
   | GraphicComponentOption
@@ -83,7 +60,6 @@ export type ChartOption = echarts.ComposeOption<
   | VisualMapComponentOption
   | TooltipComponentOption
   | LegendComponentOption
-  | TitleComponentOption
 >;
 
 interface ChartProps {

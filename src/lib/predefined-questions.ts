@@ -1,4 +1,4 @@
-export interface PredefinedQuestion {
+interface PredefinedQuestion {
   id: string;
   question: string;
   answer: string;

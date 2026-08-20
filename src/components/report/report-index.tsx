@@ -2,23 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { NavItem } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, readReadingOffset } from "@/lib/utils";
 import { PdfDownloadButton } from "./pdf-download-button";
-
-/**
- * Distance (px) from the viewport top at which a target heading is
- * considered "current" — the same single source of truth used by the CSS
- * scroll margins (--reading-offset in globals.css).
- */
-function readReadingOffset(): number {
-  if (typeof window === "undefined") return 112;
-  const raw = getComputedStyle(document.documentElement)
-    .getPropertyValue("--reading-offset")
-    .trim();
-  const n = parseFloat(raw);
-  if (!Number.isFinite(n)) return 112;
-  return raw.endsWith("rem") ? n * 16 : n;
-}
 
 function flatten(items: NavItem[]): NavItem[] {
   return items.flatMap((item) =>
@@ -60,7 +45,7 @@ interface NavClickState {
 export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string }) {
   const leaves = useMemo(() => flatten(items), [items]);
   const [active, setActive] = useState(leaves[0]?.slug ?? "");
-  const [headingOffset] = useState(readReadingOffset);
+  const headingOffset = useMemo(readReadingOffset, []);
   const navClickRef = useRef<NavClickState | null>(null);
 
   // Remember the clicked section so updateActive can keep it authoritative
@@ -259,7 +244,7 @@ export function ReportIndex({ items, slug }: { items: NavItem[]; slug: string })
             item.children?.length ? renderGroup(item) : renderRow(item, 0),
           )}
         </ol>
-        <PdfDownloadButton slug={slug} variant="compact" />
+        <PdfDownloadButton slug={slug} />
       </nav>
     </aside>
   );

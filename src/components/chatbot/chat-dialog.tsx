@@ -118,7 +118,7 @@ export function ChatDialog({
   // puntitos de escritura, luego el mensaje de bienvenida y al final las
   // preguntas sugeridas con animación.
   const [welcomeStage, setWelcomeStage] = useState<
-    "typing" | "message" | "questions"
+    "typing" | "questions"
   >("typing");
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -135,8 +135,6 @@ export function ChatDialog({
   // Distingue la re-apertura del chat (minimizar -> abrir) de la re-ejecución
   // del efecto cuando el saludo se agrega a messages.
   const prevOpenRef = useRef(false);
-
-  const questions = predefinedQuestions;
 
   useEffect(() => {
     if (open) {
@@ -178,7 +176,7 @@ export function ChatDialog({
           timestamp: Date.now(),
         },
       ]);
-      setWelcomeStage("message");
+      setWelcomeStage("typing");
     }, 900);
     welcomeQuestionsTimerRef.current = setTimeout(
       () => setWelcomeStage("questions"),
@@ -299,7 +297,7 @@ export function ChatDialog({
   }
 
   function handlePredefinedQuestion(
-    question: (typeof questions)[number],
+    question: (typeof predefinedQuestions)[number],
   ) {
     if (loading) return;
 
@@ -669,7 +667,7 @@ export function ChatDialog({
           messages.length === 1 &&
           !messages.some((m) => m.role === "user") && (
             <div className="flex flex-col items-end gap-2">
-              {questions.map((question, i) => (
+              {predefinedQuestions.map((question, i) => (
                 <button
                   key={question.id}
                   type="button"
