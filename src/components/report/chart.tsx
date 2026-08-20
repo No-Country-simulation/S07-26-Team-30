@@ -224,6 +224,10 @@ function withWatermark(option: ChartOption): ChartOption {
   const graphic = Array.isArray(cloned.graphic) ? cloned.graphic : [];
   return {
     ...cloned,
+    // Sin animaciones de entrada: el canvas offscreen se captura de
+    // inmediato y la animación haría que las barras/líneas salieran en su
+    // estado inicial (vacías) en el PNG/SVG descargado.
+    animation: false,
     graphic: [
       ...graphic,
       {
@@ -242,7 +246,7 @@ function withWatermark(option: ChartOption): ChartOption {
   };
 }
 
-function renderOffscreen(
+async function renderOffscreen(
   option: ChartOption,
   width: number,
   height: number,
@@ -258,6 +262,9 @@ function renderOffscreen(
 
   const chart = echarts.init(host, undefined, { renderer, width, height });
   chart.setOption(withWatermark(option));
+  // Espera un frame para que el chart (sin animación) pinte su estado final
+  // antes de capturar la imagen.
+  await new Promise((resolve) => requestAnimationFrame(resolve));
   const dataUrl =
     renderer === "svg"
       ? chart.getDataURL({ type: "svg" })
@@ -361,13 +368,13 @@ export function Chart({
 
   const baseName = slugify(title || caption || "chart");
 
-  const downloadPng = () => {
+  const downloadPng = async () => {
     const chart = chartRef.current;
     if (!chart) return;
 
     const width = Math.round(chart.getWidth());
     const heightPx = Math.round(chart.getHeight());
-    const dataUrl = renderOffscreen(
+    const dataUrl = await renderOffscreen(
       optionRef.current,
       width,
       heightPx,
@@ -377,13 +384,13 @@ export function Chart({
     downloadDataUrl(dataUrl, `${baseName}.png`);
   };
 
-  const downloadSvg = () => {
+  const downloadSvg = async () => {
     const chart = chartRef.current;
     if (!chart) return;
 
     const width = Math.round(chart.getWidth());
     const heightPx = Math.round(chart.getHeight());
-    const dataUrl = renderOffscreen(
+    const dataUrl = await renderOffscreen(
       optionRef.current,
       width,
       heightPx,
