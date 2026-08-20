@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bars3Icon, ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
-import hero from "../../app/assets/proyecto_nuevo_7.png"
+import hero from "../../app/assets/report-img.webp"
 import logo from "../../../public/images/logohor.webp"
 
 const navigation = [
