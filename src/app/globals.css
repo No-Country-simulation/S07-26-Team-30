@@ -607,3 +607,44 @@
 .chat-message-in { animation: chat-message-in 0.18s ease-out both; }
 .chat-dot { animation: chat-dot 1.1s ease-in-out infinite; }
 .chat-pulse-dot { animation: chat-pulse-dot 2s ease-in-out infinite; }
+
+/* Fondo del área de mensajes del chatbot: gradientes radiales suaves que
+   usan los tokens del tema, así se adaptan solos a light y dark mode. */
+.chat-backdrop {
+  background-color: var(--color-background);
+  background-image:
+    radial-gradient(
+      ellipse 90% 65% at 15% -5%,
+      color-mix(in oklab, var(--color-accent) 14%, transparent),
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse 70% 55% at 100% 105%,
+      color-mix(in oklab, var(--color-primary) 8%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 45% 40% at 90% -5%,
+      color-mix(in oklab, var(--color-accent) 7%, transparent),
+      transparent 55%
+    );
+}
+
+.dark .chat-backdrop {
+  background-image:
+    radial-gradient(
+      ellipse 90% 65% at 15% -5%,
+      color-mix(in oklab, var(--color-accent) 10%, transparent),
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse 70% 55% at 100% 105%,
+      color-mix(in oklab, var(--color-primary) 6%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 45% 40% at 90% -5%,
+      color-mix(in oklab, var(--color-accent) 5%, transparent),
+      transparent 55%
+    );
+}
