@@ -151,7 +151,12 @@ export function ChatDialog({
     // Si ya hay historial, la secuencia de bienvenida no aplica: se
     // resetea el stage para que las preguntas sugeridas no reaparezcan.
     if (messages.length > 0) {
-      setWelcomeStage("typing");
+      // El saludo sin interacción del usuario (chat minimizado y reabierto)
+      // mantiene las preguntas sugeridas; si el usuario ya participó, la
+      // secuencia de bienvenida terminó y no reaparecen.
+      setWelcomeStage(
+        messages.some((m) => m.role === "user") ? "typing" : "questions",
+      );
       return;
     }
 
