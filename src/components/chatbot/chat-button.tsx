@@ -6,13 +6,51 @@ import { X } from "lucide-react";
 import clsx from "clsx";
 import { ChatDialog } from "./chat-dialog";
 
+const CHAT_TIP_KEY = "physaflow:chat-tip-seen";
+
 export function ChatButton() {
   const [open, setOpen] = useState(false);
+  const [showTip, setShowTip] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !window.localStorage.getItem(CHAT_TIP_KEY);
+  });
+
+  function dismissTip() {
+    window.localStorage.setItem(CHAT_TIP_KEY, "1");
+    setShowTip(false);
+  }
+
+  function toggleOpen() {
+    dismissTip();
+    setOpen(!open);
+  }
 
   return (
     <>
+      {showTip && !open && (
+        <div
+          role="tooltip"
+          className="chat-pop-in fixed bottom-24 right-6 z-50 flex max-w-[15rem] items-center gap-2 rounded-2xl border border-border bg-card px-3.5 py-2.5 shadow-lg"
+        >
+          <p className="text-sm text-foreground">
+            Can I help you with anything?
+          </p>
+
+          <button
+            type="button"
+            onClick={dismissTip}
+            aria-label="Dismiss message"
+            className="cursor-pointer shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X size={14} />
+          </button>
+
+          <span className="absolute -bottom-1 right-5 h-2 w-2 rotate-45 border-b border-r border-border bg-card" />
+        </div>
+      )}
+
       <button
-        onClick={() => setOpen(!open)}
+        onClick={toggleOpen}
         className="chat-pop-in fixed bottom-6 right-6 z-50 flex size-14 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-[#0F2B20] bg-white text-[#0F2B20] shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-lift active:scale-95 print:hidden dark:border-accent dark:bg-[#14251e] dark:text-accent"
         aria-label={open ? "Close chat" : "Open chat"}
         aria-expanded={open}
