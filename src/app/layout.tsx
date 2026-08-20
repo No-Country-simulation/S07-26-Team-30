@@ -21,12 +21,35 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PhysaFlow — Stranded Capacity Index Report",
+  metadataBase: new URL("https://physaflow.com"),
+  title: {
+    default: "PhysaFlow — Stranded Capacity Index Report",
+    template: "%s | PhysaFlow",
+  },
   description:
     "An industry reference report on stranded capacity in AI data centers.",
+  applicationName: "PhysaFlow",
+  authors: [{ name: "PhysaFlow Engineering & Research Group" }],
+  openGraph: {
+    siteName: "PhysaFlow",
+    type: "website",
+    locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "PhysaFlow Stranded Capacity Index Report",
+      },
+    ],
+  },
+  twitter: { card: "summary_large_image" },
   icons: {
     icon: [{ url: "/images/icon-notext.webp", type: "image/webp" }],
+    apple: "/images/logohor.webp",
+    shortcut: "/images/icon-notext.webp",
   },
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({
@@ -42,6 +65,18 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if(localStorage.getItem("physaflow-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}`,
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "PhysaFlow",
+              url: "https://physaflow.com",
+              logo: "https://physaflow.com/images/logohor.webp",
+            }),
           }}
         />
         <ThemeProvider>
