@@ -39,6 +39,30 @@ export async function getReportNav(report: string): Promise<NavItem[]> {
   return NAV[report] ?? [];
 }
 
+// Convierte un slug ("stranded-capacity-index") en un título humano
+// ("Stranded Capacity Index").
+export function titleize(slug: string): string {
+  return slug.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+// Busca el label de la NAV para un slug de sección, sin el prefijo numérico
+// ("2.1. Facility Layer" -> "Facility Layer"). Si el slug aparece varias veces
+// (padre con children), se queda con el match más específico (el último).
+export function getReportSectionLabel(report: string, slug: string): string | null {
+  const items = NAV[report] ?? [];
+  const found: string[] = [];
+
+  const stripPrefix = (label: string) => label.replace(/^\d+(\.\d+)*\.?\s*/, "").trim();
+
+  const walk = (item: NavItem) => {
+    if (item.slug === slug) found.push(stripPrefix(item.label));
+    item.children?.forEach(walk);
+  };
+
+  items.forEach(walk);
+  return found.length > 0 ? found[found.length - 1] : null;
+}
+
 function flattenSections(item: NavItem): string[] {
   if (item.children?.length) {
     return item.children.flatMap(flattenSections);

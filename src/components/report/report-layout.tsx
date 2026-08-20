@@ -1,4 +1,5 @@
 import type { NavItem } from "@/types";
+import { titleize } from "@/lib/mdx";
 import { ReportIndex } from "./report-index";
 import { ReadingProgress } from "./reading-progress";
 
@@ -7,9 +8,6 @@ interface ReportLayoutProps {
   nav: NavItem[];
   slug: string;
 }
-
-const titleize = (slug: string) =>
-  slug.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
 export function ReportLayout({ children, nav, slug }: ReportLayoutProps) {
   const title = `PhysaFlow — ${titleize(slug)}`;
