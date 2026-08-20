@@ -35,7 +35,7 @@ export function ChatButton() {
       {showTip && !open && (
         <div
           role="tooltip"
-          className="chat-pop-in fixed bottom-24 right-6 z-50 flex max-w-[15rem] items-center gap-2 rounded-2xl border border-[#0F2B20]/10 bg-white px-3.5 py-2.5 text-[#0F2B20] shadow-lg"
+          className="chat-pop-in fixed bottom-24 right-6 z-50 flex max-w-[15rem] items-center gap-2 rounded-2xl border border-[#0F2B20]/10 bg-white px-3.5 py-2.5 text-[#0F2B20] shadow-lg print:hidden"
         >
           <p className="text-sm">Can I help you with anything?</p>
 

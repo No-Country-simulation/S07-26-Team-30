@@ -478,7 +478,7 @@ export function ChatDialog({
       inert={!open}
       style={{ transformOrigin: "bottom right" }}
       className={clsx(
-        "fixed bottom-24 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-xs flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl transition-all duration-200 ease-out sm:right-6 md:max-w-sm lg:max-w-md",
+        "fixed bottom-24 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-xs flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl transition-all duration-200 ease-out print:hidden sm:right-6 md:max-w-sm lg:max-w-md",
         open
           ? "opacity-100 scale-100 translate-y-0"
           : "pointer-events-none opacity-0 scale-95 translate-y-2",
