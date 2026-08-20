@@ -22,10 +22,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dev.physaflow.com"),
-  title: {
-    default: "PhysaFlow — Stranded Capacity Index Report",
-    template: "%s | PhysaFlow",
-  },
+title: {
+      default: "PhysaFlow — Stranded Capacity Index Report",
+      template: "PhysaFlow — %s",
+    },
   description:
     "An industry reference report on stranded capacity in AI data centers.",
   applicationName: "PhysaFlow",

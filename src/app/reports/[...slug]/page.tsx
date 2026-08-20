@@ -55,9 +55,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const sectionSlug = section.join("/");
 
   // Título humano: el label de la NAV sin prefijo numérico, o el título del
-  // reporte en el índice. El template "%s | PhysaFlow" completa el <title>.
+  // reporte en el índice. El template "PhysaFlow — %s" completa el <title>.
   const title = sectionSlug
-    ? `${getReportSectionLabel(report, sectionSlug) ?? titleize(sectionSlug)} — ${REPORT_TITLE}`
+    ? (getReportSectionLabel(report, sectionSlug) ?? titleize(sectionSlug))
     : REPORT_TITLE;
 
   const description = sectionSlug
