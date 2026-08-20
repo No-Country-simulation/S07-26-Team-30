@@ -222,7 +222,11 @@ function withWatermark(option: ChartOption): ChartOption {
   // Options are JSON-serializable (server-component prop), so a deep clone is safe.
   const cloned = JSON.parse(JSON.stringify(option)) as ChartOption;
   const graphic = Array.isArray(cloned.graphic) ? cloned.graphic : [];
-  return {
+  // Espacio reservado abajo para que la marca no quede tapada por el
+  // contenido del gráfico (eje X, barras, leyenda inferior).
+  const WATERMARK_SPACE = 24;
+
+  const result: ChartOption = {
     ...cloned,
     // Sin animaciones de entrada: el canvas offscreen se captura de
     // inmediato y la animación haría que las barras/líneas salieran en su
@@ -244,6 +248,24 @@ function withWatermark(option: ChartOption): ChartOption {
       },
     ],
   };
+
+  // Reserva espacio en el grid (barras, líneas, dispersión) para que el
+  // eje X y las marcas no queden debajo de la watermark.
+  const grid = (result as { grid?: { bottom?: number } }).grid;
+  if (grid) {
+    grid.bottom = (grid.bottom ?? 0) + WATERMARK_SPACE;
+  }
+
+  // Leyendas ancladas abajo (pie, radar, sankey, funnel) se suben para
+  // dejarle lugar a la watermark centrada.
+  const legend = (result as {
+    legend?: { bottom?: number; orient?: string };
+  }).legend;
+  if (legend && legend.bottom !== undefined) {
+    legend.bottom = Math.max(legend.bottom, WATERMARK_SPACE);
+  }
+
+  return result;
 }
 
 async function renderOffscreen(
