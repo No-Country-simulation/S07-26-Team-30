@@ -23,8 +23,6 @@
   "homepage": "https://github.com/No-Country-simulation/S07-26-Team-30#readme",
   "dependencies": {
     "@ai-sdk/groq": "^4.0.15",
-    "@ai-sdk/openai": "^4.0.23",
-    "@headlessui/react": "^2.2.10",
     "@heroicons/react": "^2.2.0",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
@@ -40,8 +38,6 @@
     "playwright-core": "^1.62.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {

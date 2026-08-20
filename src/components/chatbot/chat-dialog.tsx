@@ -12,8 +12,6 @@ import {
   FolderTree,
   Target,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "@/types";
 import {
   predefinedQuestions,
@@ -31,13 +29,69 @@ interface ChatDialogProps {
   onClose: () => void;
 }
 
-// Normaliza saltos HTML que puedan llegar desde el modelo
-// antes de pasarlos a ReactMarkdown.
-function normalizeMarkdown(content: string): string {
+// Limpia cualquier formato Markdown residual que pueda llegar del modelo
+// y lo convierte en texto plano conversacional.
+function stripMarkdown(content: string): string {
   return content
     .replace(/\\?<br\s*\/?>/gi, "\n")
     .replace(/<\/br>/gi, "\n")
+    .split("\n")
+    .map((line) => {
+      let text = line.trim();
+
+      // Títulos: "# Título"
+      text = text.replace(/^#{1,6}\s+/, "");
+      // Citas: "> texto"
+      text = text.replace(/^\s*>\s?/, "");
+      // Listas: "- item", "* item", "+ item", "1. item", "1) item"
+      text = text.replace(/^\s*([-*+]|\d+[.)])\s+/, "");
+      // Separadores horizontales: "---", "***", "___"
+      if (/^([-*_]\s*){3,}$/.test(text)) return "";
+      // Tablas: "| a | b |" y filas separadoras "|---|---|"
+      if (/^\|.*\|\s*$/.test(text)) {
+        text = text.replace(/^\||\|$/g, "").replace(/\|/g, " · ").trim();
+        if (/^[\s·:-]+$/.test(text)) return "";
+      }
+      return text;
+    })
+    .join("\n")
+    .replace(/\*\*([^*]+)\*\*/g, "$1") // **negrita**
+    .replace(/\*([^*\n]+)\*/g, "$1") // *cursiva*
+    .replace(/_([^_\n]+)_/g, "$1") // _cursiva_
+    .replace(/`([^`]+)`/g, "$1") // `código`
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [texto](url)
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+// Divide la respuesta del modelo en mensajes conversacionales: un mensaje por
+// párrafo. Los párrafos largos sin saltos de línea se dividen en grupos de
+// ~2 oraciones para que nunca llegue una pared de texto como una sola burbuja.
+function splitResponse(content: string): string[] {
+  const paragraphs = content
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const segments: string[] = [];
+  for (const paragraph of paragraphs) {
+    // Evita romper decimales ("3.2%") o siglas con puntos al dividir oraciones.
+    const hasDecimals = /\d\.\d/.test(paragraph);
+    const sentences =
+      paragraph
+        .match(/[^.!?]+(?:[.!?]+|$)/g)
+        ?.map((s) => s.trim())
+        .filter(Boolean) ?? [];
+
+    if (!hasDecimals && paragraph.length > 240 && sentences.length > 2) {
+      for (let i = 0; i < sentences.length; i += 2) {
+        segments.push(sentences.slice(i, i + 2).join(" "));
+      }
+    } else {
+      segments.push(paragraph);
+    }
+  }
+  return segments;
 }
 
 // Componente simple para el indicador de escritura
@@ -83,13 +137,20 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null,
   );
+  // Revelado escalonado: cuando la respuesta se parte en varios mensajes,
+  // se muestran de a uno con un retraso fijo entre cada uno.
+  const [pendingSegments, setPendingSegments] = useState<string[] | null>(
+    null,
+  );
+  const [revealedCount, setRevealedCount] = useState(0);
   const [nearBottom, setNearBottom] = useState(true);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const revealTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const questions = predefinedQuestions[language];
+  const questions = predefinedQuestions;
 
   useEffect(() => {
     if (open) {
@@ -101,7 +162,14 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
     if (!open || !nearBottom) return;
 
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, open, nearBottom]);
+  }, [messages, open, nearBottom, pendingSegments, revealedCount]);
+
+  // Limpia el timer del revelado escalonado si el componente se desmonta.
+  useEffect(() => {
+    return () => {
+      if (revealTimerRef.current) clearInterval(revealTimerRef.current);
+    };
+  }, []);
 
   function handleScroll() {
     const el = scrollRef.current;
@@ -113,6 +181,12 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
   function handleClearChat() {
     if (loading) return;
 
+    if (revealTimerRef.current) {
+      clearInterval(revealTimerRef.current);
+      revealTimerRef.current = null;
+    }
+    setPendingSegments(null);
+    setRevealedCount(0);
     setMessages([]);
     setInput("");
     setStreamingMessageId(null);
@@ -137,28 +211,34 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
       timestamp: Date.now(),
     };
 
-    setMessages((prev) => [...prev, userMsg, assistantMsg]);
-  }
-
-  async function handleAction(action: ChatbotAction) {
-    if (loading) return;
-
-    const userMsg: ChatMessage = {
+    // Las respuestas predefinidas son siempre en inglés, así que el mensaje
+    // de cierre también.
+    const closingMsg: ChatMessage = {
       id: crypto.randomUUID(),
-      role: "user",
-      content: action.label[language],
+      role: "assistant",
+      content: "Can I help you with anything else?",
       timestamp: Date.now(),
     };
 
-    const initialAssistantMsg: ChatMessage = {
+    setMessages((prev) => [...prev, userMsg, assistantMsg, closingMsg]);
+  }
+
+  // Turno del asistente: agrega el mensaje placeholder, streamea la respuesta
+  // y al terminar la convierte en varios mensajes (una burbuja por segmento).
+  async function runAssistantTurn(
+    history: ChatMessage[],
+    language: ChatLanguage,
+    opts: { action?: string } = {},
+  ) {
+    const placeholder: ChatMessage = {
       id: crypto.randomUUID(),
       role: "assistant",
       content: "",
       timestamp: Date.now(),
     };
 
-    setMessages((prev) => [...prev, userMsg, initialAssistantMsg]);
-    setStreamingMessageId(initialAssistantMsg.id);
+    setMessages((prev) => [...prev, placeholder]);
+    setStreamingMessageId(placeholder.id);
     setLoading(true);
 
     try {
@@ -168,16 +248,32 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({
+          messages: history.map((m) => ({
             role: m.role,
             content: m.content,
           })),
-          action: action.id,
           language,
+          ...(opts.action ? { action: opts.action } : {}),
         }),
       });
 
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        // La API devuelve el motivo real en el body (JSON); lo usamos en vez
+        // de un mensaje genérico.
+        let serverError = "";
+        try {
+          const data = await res.json();
+          if (typeof data?.error === "string") serverError = data.error;
+        } catch {
+          // Body no JSON: usamos el fallback genérico.
+        }
+        throw new Error(serverError || `Request failed (${res.status})`);
+      }
+
+      // El idioma real de la respuesta lo decide el server (detección); el
+      // header nos dice qué idioma usar para el mensaje de cierre.
+      const responseLanguage: "es" | "en" =
+        res.headers.get("X-Response-Language") === "es" ? "es" : "en";
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -195,31 +291,120 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
 
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === initialAssistantMsg.id
+              msg.id === placeholder.id
                 ? { ...msg, content: assistantContent }
                 : msg,
             ),
           );
         }
       }
-    } catch {
+
+      // Al terminar el streaming: la respuesta se parte en mensajes y al final
+      // se agrega un mensaje de cierre en el idioma en que respondió el
+      // chatbot. Cada mensaje se "envía" de a uno con 2 segundos de retraso.
+      const segments = splitResponse(assistantContent);
+
+      if (segments.length === 0) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === placeholder.id
+              ? {
+                  ...msg,
+                  content:
+                    language === "es"
+                      ? "No recibí una respuesta válida. Intentá de nuevo."
+                      : "I didn't get a valid response. Please try again.",
+                }
+              : msg,
+          ),
+        );
+        setLoading(false);
+        setStreamingMessageId(null);
+        return;
+      }
+
+      const closingMessage =
+        responseLanguage === "es"
+          ? "¿Puedo ayudarte con algo más?"
+          : "Can I help you with anything else?";
+
+      const finalSegments = [...segments, closingMessage];
+
+      // Revelado escalonado: el primer mensaje aparece ya, los siguientes
+      // cada 2 segundos (los puntitos de escritura se muestran entre medio).
+      setPendingSegments(finalSegments);
+      setRevealedCount(1);
+
+      let revealed = 1;
+      revealTimerRef.current = setInterval(() => {
+        revealed += 1;
+        setRevealedCount(revealed);
+
+        if (revealed >= finalSegments.length) {
+          if (revealTimerRef.current) {
+            clearInterval(revealTimerRef.current);
+            revealTimerRef.current = null;
+          }
+
+          // Una vez revelados todos, el placeholder se convierte en mensajes
+          // reales (una burbuja por segmento).
+          setMessages((prev) =>
+            prev.flatMap((msg) => {
+              if (msg.id !== placeholder.id) return [msg];
+              return finalSegments.map((content, i) => ({
+                id: i === 0 ? msg.id : crypto.randomUUID(),
+                role: "assistant" as const,
+                content,
+                timestamp: msg.timestamp,
+              }));
+            }),
+          );
+          setPendingSegments(null);
+          setRevealedCount(0);
+          setLoading(false);
+          setStreamingMessageId(null);
+        }
+      }, 2000);
+    } catch (err) {
+      const fallback =
+        language === "es"
+          ? opts.action
+            ? "Lo siento, no pude procesar esta acción."
+            : "Lo siento, no pude procesar tu solicitud."
+          : opts.action
+            ? "Sorry, I couldn't process this action."
+            : "Sorry, I couldn't process your request.";
+
+      const message =
+        err instanceof Error && err.message.trim() !== ""
+          ? err.message
+          : fallback;
+
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === initialAssistantMsg.id
-            ? {
-                ...msg,
-                content:
-                  language === "es"
-                    ? "Lo siento, no pude procesar esta acción."
-                    : "Sorry, I couldn't process this action.",
-              }
-            : msg,
+          msg.id === placeholder.id ? { ...msg, content: message } : msg,
         ),
       );
-    } finally {
       setLoading(false);
       setStreamingMessageId(null);
     }
+  }
+
+  async function handleAction(action: ChatbotAction) {
+    if (loading) return;
+
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: action.label[language],
+      timestamp: Date.now(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+
+    await runAssistantTurn([...messages, userMsg], language, {
+      action: action.id,
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -234,76 +419,10 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
       timestamp: Date.now(),
     };
 
-    const initialAssistantMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content: "",
-      timestamp: Date.now(),
-    };
-
-    setMessages((prev) => [...prev, userMsg, initialAssistantMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setStreamingMessageId(initialAssistantMsg.id);
-    setLoading(true);
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          language,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed");
-
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let assistantContent = "";
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-
-          if (done) break;
-
-          assistantContent += decoder.decode(value, {
-            stream: true,
-          });
-
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === initialAssistantMsg.id
-                ? { ...msg, content: assistantContent }
-                : msg,
-            ),
-          );
-        }
-      }
-    } catch {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === initialAssistantMsg.id
-            ? {
-                ...msg,
-                content:
-                  language === "es"
-                    ? "Lo siento, no pude procesar tu solicitud."
-                    : "Sorry, I couldn't process your request.",
-              }
-            : msg,
-        ),
-      );
-    } finally {
-      setLoading(false);
-      setStreamingMessageId(null);
-    }
+    await runAssistantTurn([...messages, userMsg], language);
   }
 
   const dialogTitle =
@@ -475,129 +594,104 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
           </div>
         )}
 
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={clsx(
-              "chat-message-in flex min-w-0 items-start gap-3",
-              msg.role === "user"
-                ? "justify-end"
-                : "justify-start",
-            )}
-          >
-            {msg.role === "assistant" && (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
-                <Image
-                  src="/images/icon-notext.webp"
-                  alt="PhysaFlow"
-                  width={32}
-                  height={32}
-                  className="size-full object-cover"
-                />
-              </div>
-            )}
+        {messages.map((msg) => {
+          const isStreaming =
+            msg.role === "assistant" &&
+            msg.id === streamingMessageId &&
+            loading;
 
+          // Durante el streaming se muestra una sola burbuja creciendo.
+          // Durante el revelado escalonado solo se muestran los mensajes
+          // que ya fueron "enviados".
+          const segments = isStreaming
+            ? pendingSegments
+              ? pendingSegments.slice(0, revealedCount)
+              : msg.content.trim() !== ""
+                ? [msg.content]
+                : []
+            : msg.role === "assistant"
+              ? splitResponse(msg.content)
+              : [msg.content];
+
+          return (
             <div
+              key={msg.id}
               className={clsx(
-                "min-w-0 max-w-[calc(100%-2.75rem)] rounded-2xl px-3 py-2 text-sm sm:max-w-[85%]",
-                msg.role === "user"
-                  ? "rounded-br-md bg-[#1F4A35] text-white dark:bg-[#24513E]"
-                  : "rounded-bl-md bg-muted",
+                "chat-message-in flex min-w-0 items-start gap-3",
+                msg.role === "user" ? "justify-end" : "justify-start",
               )}
             >
-              {msg.role === "assistant" ? (
-                <div
-                  className="
-                    min-w-0 break-words
-                    [&_h1]:mb-3 [&_h1]:text-base [&_h1]:font-semibold
-                    [&_h2]:mb-3 [&_h2]:mt-4 [&_h2]:text-base [&_h2]:font-semibold
-                    [&_h3]:mb-2 [&_h3]:mt-3 [&_h3]:text-sm [&_h3]:font-semibold
-                    [&_p]:mb-3 [&_p]:leading-6
-                    [&_p:last-child]:mb-0
-                    [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5
-                    [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5
-                    [&_li]:mb-1 [&_li]:leading-6
-                    [&_strong]:font-semibold
-                    [&_em]:italic
-                    [&_hr]:my-4 [&_hr]:border-border
-                    [&_blockquote]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:border-accent [&_blockquote]:pl-3
-                    [&_code]:break-words [&_code]:rounded [&_code]:bg-background/70 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs
-                    [&_pre]:my-3 [&_pre]:max-w-full [&_pre]:overflow-hidden [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:rounded-md [&_pre]:bg-background/70 [&_pre]:p-3
-                    [&_pre_code]:bg-transparent [&_pre_code]:p-0
-                    [&_table]:my-3 [&_table]:w-full [&_table]:table-fixed [&_table]:text-xs
-                    [&_thead]:bg-background/50
-                    [&_th]:break-words [&_th]:border-b [&_th]:border-border [&_th]:px-2 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold
-                    [&_td]:break-words [&_td]:border-b [&_td]:border-border [&_td]:px-2 [&_td]:py-2 [&_td]:align-top
-                    [&_tr:last-child_td]:border-b-0
-                  "
-                >
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      table: ({ children }) => (
-                        <div className="w-full max-w-full overflow-hidden">
-                          <table>{children}</table>
-                        </div>
-                      ),
-                      a: ({ children, href }) => (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="break-words underline underline-offset-2"
-                        >
-                          {children}
-                        </a>
-                      ),
-                    }}
-                  >
-                    {normalizeMarkdown(msg.content)}
-                  </ReactMarkdown>
-                </div>
-              ) : (
-                <div className="whitespace-pre-wrap break-words">
-                  {msg.content}
+              {msg.role === "assistant" && (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                  <Image
+                    src="/images/icon-notext.webp"
+                    alt="PhysaFlow"
+                    width={32}
+                    height={32}
+                    className="size-full object-cover"
+                  />
                 </div>
               )}
 
               <div
                 className={clsx(
-                  "mt-2 text-right text-xs",
-                  msg.role === "user"
-                    ? "text-white/70"
-                    : "text-muted-foreground",
+                  "flex min-w-0 max-w-[calc(100%-2.75rem)] flex-col gap-2 sm:max-w-[85%]",
+                  msg.role === "user" ? "items-end" : "items-start",
                 )}
               >
-                {new Date(msg.timestamp).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {segments.length === 0 ? (
+                  <TypingIndicator />
+                ) : (
+                  segments.map((segment, i) => {
+                    const isLast = i === segments.length - 1;
+
+                    return (
+                      <div
+                        key={i}
+                        className={clsx(
+                          "rounded-2xl px-3 py-2 text-sm",
+                          msg.role === "user"
+                            ? "rounded-br-md bg-[#1F4A35] text-white dark:bg-[#24513E]"
+                            : "rounded-bl-md bg-muted",
+                        )}
+                      >
+                        <div className="whitespace-pre-wrap break-words">
+                          {msg.role === "assistant"
+                            ? stripMarkdown(segment)
+                            : segment}
+                        </div>
+
+                        {isLast && !isStreaming && (
+                          <div
+                            className={clsx(
+                              "mt-2 text-right text-xs",
+                              msg.role === "user"
+                                ? "text-white/70"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {new Date(msg.timestamp).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+
+                {isStreaming && segments.length > 0 && <TypingIndicator />}
               </div>
+
+              {msg.role === "user" && (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                  <User size={18} />
+                </div>
+              )}
             </div>
-
-            {msg.role === "user" && (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
-                <User size={18} />
-              </div>
-            )}
-          </div>
-        ))}
-
-        {loading && !streamingMessageId && messages.length > 0 && (
-          <div className="chat-message-in flex items-start justify-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
-              <Image
-                src="/images/icon-notext.webp"
-                alt="PhysaFlow"
-                width={32}
-                height={32}
-                className="size-full object-cover"
-              />
-            </div>
-
-            <TypingIndicator />
-          </div>
-        )}
+          );
+        })}
 
         <div ref={bottomRef} />
       </div>

@@ -1,7 +1,7 @@
 import { streamText } from "ai";
 import { groq } from "@ai-sdk/groq";
 import { StaticSearchProvider } from "@/lib/context-provider";
-import { buildSystemPrompt, buildContext } from "@/lib/prompts";
+import { buildSystemPrompt, buildActionSystemPrompt, buildContext } from "@/lib/prompts";
 import {
   getChatbotAction,
   type ChatbotActionId,
@@ -23,7 +23,52 @@ const provider = new StaticSearchProvider(reportDir, {
   references: "08-references.mdx",
 });
 
-export const maxDuration = 30;
+export const maxDuration = 60;
+
+// Detecta el idioma de la consulta con un diccionario ligero de palabras
+// frecuentes. Devuelve undefined cuando la consulta es ambigua.
+function detectLanguage(text: string): "es" | "en" | undefined {
+  const normalized = text
+    .toLowerCase()
+    .replace(/[^a-záéíóúüñ\s]/g, " ");
+
+  const esTokens = [
+    "el", "la", "los", "las", "de", "del", "que", "qué", "para", "cómo",
+    "cuál", "cuáles", "cuánto", "cuántos", "dónde", "cuándo", "porque",
+    "porqué", "es", "son", "un", "una", "resumen", "resume", "resumir",
+    "reporte", "informe", "metodología", "metodologia", "conclusión",
+    "conclusiones", "explicar", "explica", "explicame", "explícame",
+    "quiero", "necesito", "ayuda", "podés", "podes", "puedes", "querés",
+    "queres", "háblame", "hablame", "contame", "dame", "hola", "gracias",
+    "sí", "buenas", "chau", "esta", "este", "esto", "tiene", "tienen",
+    "hay", "está", "están", "sabés", "sabes", "hacer", "hace", "me",
+    "te", "se",
+  ];
+  const enTokens = [
+    "the", "and", "what", "how", "why", "is", "are", "of", "for", "you",
+    "i", "it", "to", "summary", "summarize", "explain", "methodology",
+    "conclusion", "conclusions", "report", "tell", "give", "want", "need",
+    "can", "do", "does", "this", "that", "these", "those", "have", "has",
+    "there", "about", "with", "from", "hi", "hello", "thanks", "thank",
+    "please", "help", "my", "your",
+  ];
+
+  const words = normalized.split(/\s+/).filter(Boolean);
+  let esScore = 0;
+  let enScore = 0;
+
+  for (const word of words) {
+    if (esTokens.includes(word)) esScore += 1;
+    if (enTokens.includes(word)) enScore += 1;
+  }
+
+  // Las tildes y la ñ son una señal fuerte de español.
+  if (/[áéíóúüñ]/i.test(text)) esScore += 2;
+
+  if (esScore > enScore) return "es";
+  if (enScore > esScore) return "en";
+  return undefined;
+}
 
 export async function POST(req: Request) {
   const { messages, action, language } = await req.json();
@@ -35,6 +80,13 @@ export async function POST(req: Request) {
 
   const selectedLanguage: "es" | "en" =
     language === "es" || language === "en" ? language : "en";
+
+  // El idioma de la respuesta se detecta de la consulta; el selector del
+  // cliente solo actúa como respaldo cuando la detección es ambigua.
+  const responseLanguage: "es" | "en" =
+    detectLanguage(query) ?? selectedLanguage;
+
+  const isAction = typeof action === "string";
 
   let context = "";
 
@@ -57,54 +109,31 @@ export async function POST(req: Request) {
     // NORMAL QUESTION / RAG
     // -------------------------------------------------------------------------
     if (!context) {
-      let searchResults = await provider.getRelevantContext(query);
-
-      // Si no hay resultados (ej. consulta en español vs reporte en inglés),
-      // intentamos una recuperación semántica básica basada en palabras clave.
-      if (searchResults.length === 0) {
-        const lowerQuery = query.toLowerCase();
-        let fallbackSlugs: string[] = [];
-
-        if (lowerQuery.includes("introducc") || lowerQuery.includes("resumen")) {
-          fallbackSlugs = ["executive-summary"];
-        } else if (lowerQuery.includes("metodolog")) {
-          fallbackSlugs = ["methodology"];
-        } else if (
-          lowerQuery.includes("instalacion") ||
-          lowerQuery.includes("facility") ||
-          lowerQuery.includes("infraestructura")
-        ) {
-          fallbackSlugs = ["facility-layer"];
-        } else if (lowerQuery.includes("it") || lowerQuery.includes("equipo")) {
-          fallbackSlugs = ["it-layer"];
-        }
-
-        if (fallbackSlugs.length > 0) {
-          searchResults = await provider.getSectionContext(fallbackSlugs);
-        }
-      }
-
+      const searchResults = await provider.getRelevantContext(query);
       context = buildContext(searchResults);
     }
 
-    // Si no se encuentra contexto relevante
+    // Si no se encuentra contexto relevante, respondemos de forma conversacional
+    // (200) en vez de un error HTTP: el usuario sigue viendo un mensaje normal.
     if (!context || context.trim().length === 0) {
       console.warn(
         `No se encontró contexto relevante para la consulta: "${query}"`,
       );
 
-      return new Response(
-        JSON.stringify({
-          error:
-            selectedLanguage === "es"
-              ? "Lo siento, no se encontró información relevante para su pregunta en el reporte."
-              : "I'm sorry, no relevant information was found for your question in the report.",
-        }),
-        {
-          status: 404,
-          headers: { "Content-Type": "application/json" },
+      const fallbackMessage =
+        responseLanguage === "es"
+          ? "No encontré esa información en el reporte. Podés preguntarme por el resumen, la metodología o las conclusiones."
+          : "I couldn't find that in the report. You can ask me about the summary, methodology, or conclusions.";
+
+      return new Response(fallbackMessage, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          // El cliente usa este header para el mensaje de cierre ("¿Puedo
+          // ayudarte con algo más?") en el idioma correcto.
+          "X-Response-Language": responseLanguage,
         },
-      );
+      });
     }
 
     // -------------------------------------------------------------------------
@@ -113,14 +142,23 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: groq("openai/gpt-oss-120b"),
-      system: `${buildSystemPrompt(selectedLanguage)}
+      system: `${(isAction
+          ? buildActionSystemPrompt(responseLanguage)
+          : buildSystemPrompt(responseLanguage))}
 
 Report context:
 ${context}`,
       messages,
+      // Los botones de acción responden en 2-4 oraciones cortas; el tope
+      // garantiza brevedad aunque el modelo intente expandirse.
+      maxOutputTokens: isAction ? 160 : undefined,
     });
 
-    return result.toTextStreamResponse();
+    return result.toTextStreamResponse({
+      headers: {
+        "X-Response-Language": responseLanguage,
+      },
+    });
   } catch (error: any) {
     console.error("Error en la API de chat:", {
       message: error.message,
@@ -134,7 +172,9 @@ ${context}`,
       return new Response(
         JSON.stringify({
           error:
-            "Demasiadas solicitudes. Por favor, espere un momento e inténtelo de nuevo.",
+            responseLanguage === "es"
+              ? "Demasiadas solicitudes. Por favor, espere un momento e inténtelo de nuevo."
+              : "Too many requests. Please wait a moment and try again.",
         }),
         {
           status: 429,
@@ -145,7 +185,9 @@ ${context}`,
       return new Response(
         JSON.stringify({
           error:
-            "El servicio no está disponible en este momento. Por favor, inténtelo de nuevo más tarde.",
+            responseLanguage === "es"
+              ? "El servicio no está disponible en este momento. Por favor, inténtelo de nuevo más tarde."
+              : "The service is unavailable right now. Please try again later.",
         }),
         {
           status: 500,
@@ -156,7 +198,9 @@ ${context}`,
       return new Response(
         JSON.stringify({
           error:
-            "Hubo un problema con su solicitud. Por favor, verifique los datos e inténtelo de nuevo.",
+            responseLanguage === "es"
+              ? "Hubo un problema con su solicitud. Por favor, verifique los datos e inténtelo de nuevo."
+              : "There was a problem with your request. Please check the details and try again.",
         }),
         {
           status: 400,
@@ -166,7 +210,10 @@ ${context}`,
     } else {
       return new Response(
         JSON.stringify({
-          error: "Ocurrió un error inesperado. Por favor, inténtelo de nuevo.",
+          error:
+            responseLanguage === "es"
+              ? "Ocurrió un error inesperado. Por favor, inténtelo de nuevo."
+              : "An unexpected error occurred. Please try again.",
         }),
         {
           status: 500,

@@ -63,23 +63,31 @@ export class StaticSearchProvider implements ContextProvider {
   async getRelevantContext(query: string): Promise<SearchResult[]> {
     await this.ensureLoaded();
 
+    // Conservamos acrónimos cortos en mayúsculas ("AI", "IT") que son
+    // centrales para el reporte, aunque tengan 2 letras.
     let terms = query
-      .toLowerCase()
       .split(/\W+/)
-      .filter((t) => t.length > 2);
+      .filter((t) => t.length > 2 || /^[A-Z]{2,}$/.test(t))
+      .map((t) => t.toLowerCase());
 
     // BUG-AI-003 FIX: Diccionario ligero de equivalencias/sinónimos multilingüe
     // para mapear términos en español al contenido en inglés del reporte.
+    // Las claves son raíces/raíces flexivas ("resum" cubre resumen, resume,
+    // resumir, resumí) para no depender de la forma exacta de la palabra.
     const queryLower = query.toLowerCase();
     const synonymMap: Record<string, string[]> = {
+      resum: ["summary", "executive", "overview"], // resumen, resume, resumir
+      report: ["report", "summary"], // reporte, informe, report
+      inform: ["report", "summary"], // informe, informes, información
       introducc: ["introduction", "executive", "summary", "overview"],
-      resumen: ["summary", "executive", "overview"],
       metodolog: ["methodology", "approach", "methods"],
       infraestructura: ["facility", "infrastructure", "layer"],
       instalacion: ["facility", "infrastructure"],
       equipo: ["equipment", "layer", "it"],
       capacidad: ["capacity", "stranded", "index"],
       varada: ["stranded", "capacity"],
+      conclusion: ["conclusion", "findings", "summary"],
+      hallazg: ["findings", "conclusion", "summary"], // hallazgos
     };
 
     for (const [key, synonyms] of Object.entries(synonymMap)) {
@@ -196,7 +204,13 @@ function scoreSection(section: Section, terms: string[]): number {
 
   for (const term of terms) {
     const escapedTerm = escapeRegExp(term);
-    const re = new RegExp(escapedTerm, "gi");
+
+    // Los términos cortos ("ai", "it") se matchean como palabra completa para
+    // no sumar ruido por subcadenas ("available", "main", "training").
+    const re =
+      term.length <= 2
+        ? new RegExp(`\\b${escapedTerm}\\b`, "gi")
+        : new RegExp(escapedTerm, "gi");
     const matches = body.match(re);
 
     if (matches) score += matches.length;
