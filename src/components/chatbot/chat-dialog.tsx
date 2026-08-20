@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Send, Trash2, User } from "lucide-react";
+import { X, Send, Trash2, User, Minimize2 } from "lucide-react";
 import type { ChatMessage } from "@/types";
 import { predefinedQuestions } from "@/lib/predefined-questions";
 import clsx from "clsx";
@@ -10,6 +10,7 @@ import clsx from "clsx";
 interface ChatDialogProps {
   open: boolean;
   onClose: () => void;
+  onMinimize?: () => void;
 }
 
 // Limpia cualquier formato Markdown residual que pueda llegar del modelo
@@ -97,7 +98,11 @@ function TypingIndicator() {
   );
 }
 
-export function ChatDialog({ open, onClose }: ChatDialogProps) {
+export function ChatDialog({
+  open,
+  onClose,
+  onMinimize,
+}: ChatDialogProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -508,7 +513,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
             type="button"
             onClick={handleClearChat}
             disabled={loading || messages.length === 0}
-            className="rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Clear chat"
             title="Clear chat"
           >
@@ -517,9 +522,19 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
 
           <button
             type="button"
+            onClick={onMinimize}
+            aria-label="Minimize chat"
+            title="Minimize chat"
+            className="cursor-pointer rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+          >
+            <Minimize2 size={17} />
+          </button>
+
+          <button
+            type="button"
             onClick={onClose}
             aria-label="Close chat"
-            className="rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+            className="cursor-pointer rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
           >
             <X size={18} />
           </button>
@@ -659,7 +674,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
                   type="button"
                   onClick={() => handlePredefinedQuestion(question)}
                   disabled={loading}
-                  className="chat-message-in w-full max-w-[85%] rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-all duration-150 hover:border-accent/60 hover:bg-accent-soft hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  className="chat-message-in w-full max-w-[85%] cursor-pointer rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-all duration-150 hover:border-accent/60 hover:bg-accent-soft hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
                   style={{ animationDelay: `${i * 120}ms` }}
                 >
                   {question.question}
