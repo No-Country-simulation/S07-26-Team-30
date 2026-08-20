@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
 export default function HomePage() {
-  redirect("/reports/stranded-capacity-index");
+  permanentRedirect("/reports/stranded-capacity-index");
 }
