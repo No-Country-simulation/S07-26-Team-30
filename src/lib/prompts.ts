@@ -77,20 +77,6 @@ export function buildSystemPrompt(language: "es" | "en"): string {
 ${languageInstruction(language)}`;
 }
 
-export function buildActionSystemPrompt(language: "es" | "en"): string {
-  return `${SYSTEM_PROMPT}
-
-${languageInstruction(language)}
-
-Action request:
-- The user selected a button, not a typed question.
-- Answer in 2–4 short sentences (about 30–50 words), in plain text.
-- Sound like briefly telling a colleague the gist, not writing a report.
-- Do NOT summarize section by section and do NOT enumerate every topic covered by the context.
-- Pick the single most important idea and support it with at most one or two details.
-- Do not use any Markdown or HTML formatting.`;
-}
-
 export function buildContext(results: SearchResult[]): string {
   return results
     .map(

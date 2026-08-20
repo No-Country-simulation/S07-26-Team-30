@@ -1,5 +1,3 @@
-export type ChatLanguage = "es" | "en";
-
 export interface PredefinedQuestion {
   id: string;
   question: string;

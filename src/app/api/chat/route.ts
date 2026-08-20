@@ -1,11 +1,7 @@
 import { streamText } from "ai";
 import { groq } from "@ai-sdk/groq";
 import { StaticSearchProvider } from "@/lib/context-provider";
-import { buildSystemPrompt, buildActionSystemPrompt, buildContext } from "@/lib/prompts";
-import {
-  getChatbotAction,
-  type ChatbotActionId,
-} from "@/lib/chatbot-actions";
+import { buildSystemPrompt, buildContext } from "@/lib/prompts";
 import path from "node:path";
 
 const reportDir = path.join(
@@ -71,47 +67,25 @@ function detectLanguage(text: string): "es" | "en" | undefined {
 }
 
 export async function POST(req: Request) {
-  const { messages, action, language } = await req.json();
+  const { messages } = await req.json();
 
   const lastMessage = messages[messages.length - 1];
 
   const query =
     typeof lastMessage?.content === "string" ? lastMessage.content : "";
 
-  const selectedLanguage: "es" | "en" =
-    language === "es" || language === "en" ? language : "en";
-
-  // El idioma de la respuesta se detecta de la consulta; el selector del
-  // cliente solo actúa como respaldo cuando la detección es ambigua.
-  const responseLanguage: "es" | "en" =
-    detectLanguage(query) ?? selectedLanguage;
-
-  const isAction = typeof action === "string";
+  // La interfaz ya no ofrece selector de idioma; el idioma de la respuesta
+  // se detecta de la consulta y el fallback es inglés.
+  const responseLanguage: "es" | "en" = detectLanguage(query) ?? "en";
 
   let context = "";
 
   try {
     // -------------------------------------------------------------------------
-    // PREDEFINED ACTION
-    // -------------------------------------------------------------------------
-    if (typeof action === "string") {
-      const chatbotAction = getChatbotAction(action as ChatbotActionId);
-
-      if (chatbotAction) {
-        const searchResults = await provider.getSectionContext(
-          chatbotAction.sections,
-        );
-        context = buildContext(searchResults);
-      }
-    }
-
-    // -------------------------------------------------------------------------
     // NORMAL QUESTION / RAG
     // -------------------------------------------------------------------------
-    if (!context) {
-      const searchResults = await provider.getRelevantContext(query);
-      context = buildContext(searchResults);
-    }
+    const searchResults = await provider.getRelevantContext(query);
+    context = buildContext(searchResults);
 
     // Si no se encuentra contexto relevante, respondemos de forma conversacional
     // (200) en vez de un error HTTP: el usuario sigue viendo un mensaje normal.
@@ -142,16 +116,11 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: groq("openai/gpt-oss-120b"),
-      system: `${(isAction
-          ? buildActionSystemPrompt(responseLanguage)
-          : buildSystemPrompt(responseLanguage))}
+      system: `${buildSystemPrompt(responseLanguage)}
 
 Report context:
 ${context}`,
       messages,
-      // Los botones de acción responden en 2-4 oraciones cortas; el tope
-      // garantiza brevedad aunque el modelo intente expandirse.
-      maxOutputTokens: isAction ? 160 : undefined,
     });
 
     return result.toTextStreamResponse({
@@ -164,8 +133,6 @@ ${context}`,
       message: error.message,
       stack: error.stack,
       query: query,
-      action: action,
-      language: language,
     });
 
     if (error.status === 429) {

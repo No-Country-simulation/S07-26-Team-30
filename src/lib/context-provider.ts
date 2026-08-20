@@ -133,21 +133,6 @@ export class StaticSearchProvider implements ContextProvider {
       score,
     }));
   }
-
-  // Devuelve secciones específicas del reporte para acciones predefinidas.
-  async getSectionContext(slugs: string[]): Promise<SearchResult[]> {
-    await this.ensureLoaded();
-
-    return slugs
-      .map((slug) => this.sections.find((section) => section.slug === slug))
-      .filter((section): section is Section => Boolean(section))
-      .map((section) => ({
-        slug: section.slug,
-        title: section.title,
-        content: cleanContent(section.content),
-        score: 1,
-      }));
-  }
 }
 
 // -- helpers ----------------------------------------------------------------
