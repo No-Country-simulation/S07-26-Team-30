@@ -9,8 +9,8 @@ import logo from "../../../public/images/logohor.webp"
 const navigation = [
   { name: 'Introduction', href: '/reports/stranded-capacity-index#1-executive-summary-introduction' },
   { name: 'Taxonomy', href: '/reports/stranded-capacity-index#2-taxonomy-of-stranded-capacity' },
-  { name: 'Methodology', href: '/reports/stranded-capacity-index#05-methodology' },
-  { name: 'References', href: '/reports/stranded-capacity-index#08-references' },
+  { name: 'Methodology', href: '/reports/stranded-capacity-index#3-psci-measurement-methodology-benchmarks' },
+  { name: 'References', href: '/reports/stranded-capacity-index#5-references-key-literature' },
 ]
 
 export function Header() {

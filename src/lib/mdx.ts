@@ -29,9 +29,9 @@ const NAV: Record<string, NavItem[]> = {
         },
       ],
     },
-    { label: "3. Methodology & Benchmarks", slug: "05-methodology" },
-    { label: "4. How to Cite", slug: "07-how-to-cite" },
-    { label: "5. References", slug: "08-references" },
+    { label: "3. Methodology & Benchmarks", slug: "05-methodology", anchor: "3-psci-measurement-methodology-benchmarks" },
+    { label: "4. How to Cite", slug: "07-how-to-cite", anchor: "4-how-to-cite-this-document" },
+    { label: "5. References", slug: "08-references", anchor: "5-references-key-literature" },
   ],
 };
 
