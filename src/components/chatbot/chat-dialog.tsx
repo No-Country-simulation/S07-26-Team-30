@@ -2,26 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import {
-  X,
-  Send,
-  Trash2,
-  User,
-  FileText,
-  FlaskConical,
-  FolderTree,
-  Target,
-} from "lucide-react";
+import { X, Send, Trash2, User } from "lucide-react";
 import type { ChatMessage } from "@/types";
-import {
-  predefinedQuestions,
-  type ChatLanguage,
-} from "@/lib/predefined-questions";
-import {
-  chatbotActions,
-  type ChatbotAction,
-  type ChatbotActionId,
-} from "@/lib/chatbot-actions";
+import { predefinedQuestions } from "@/lib/predefined-questions";
 import clsx from "clsx";
 
 interface ChatDialogProps {
@@ -114,26 +97,10 @@ function TypingIndicator() {
   );
 }
 
-function getActionIcon(actionId: ChatbotActionId) {
-  switch (actionId) {
-    case "summary":
-      return FileText;
-    case "methodology":
-      return FlaskConical;
-    case "taxonomy":
-      return FolderTree;
-    case "conclusions":
-      return Target;
-    default:
-      return FileText;
-  }
-}
-
 export function ChatDialog({ open, onClose }: ChatDialogProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [language, setLanguage] = useState<ChatLanguage>("en");
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null,
   );
@@ -144,11 +111,21 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
   );
   const [revealedCount, setRevealedCount] = useState(0);
   const [nearBottom, setNearBottom] = useState(true);
+  // Secuencia de bienvenida: al abrir el chat vacío, primero se muestran los
+  // puntitos de escritura, luego el mensaje de bienvenida y al final las
+  // preguntas sugeridas con animación.
+  const [welcomeStage, setWelcomeStage] = useState<
+    "typing" | "message" | "questions"
+  >("typing");
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const revealTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const welcomeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const predefinedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const questions = predefinedQuestions;
 
@@ -158,16 +135,44 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
     }
   }, [open]);
 
+  // Secuencia de bienvenida: al abrir con el chat vacío, el asistente
+  // "escribe" (puntitos), luego envía el saludo y al final aparecen las
+  // preguntas sugeridas, una a una, como mensajes del usuario.
+  useEffect(() => {
+    if (!open || messages.length > 0) return;
+
+    setWelcomeStage("typing");
+    const messageTimer = setTimeout(() => setWelcomeStage("message"), 900);
+    const questionsTimer = setTimeout(
+      () => setWelcomeStage("questions"),
+      2100,
+    );
+
+    return () => {
+      clearTimeout(messageTimer);
+      clearTimeout(questionsTimer);
+    };
+  }, [open, messages.length]);
+
   useEffect(() => {
     if (!open || !nearBottom) return;
 
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, open, nearBottom, pendingSegments, revealedCount]);
+  }, [
+    messages,
+    open,
+    nearBottom,
+    pendingSegments,
+    revealedCount,
+    welcomeStage,
+  ]);
 
   // Limpia el timer del revelado escalonado si el componente se desmonta.
   useEffect(() => {
     return () => {
       if (revealTimerRef.current) clearInterval(revealTimerRef.current);
+      if (welcomeTimerRef.current) clearTimeout(welcomeTimerRef.current);
+      if (predefinedTimerRef.current) clearTimeout(predefinedTimerRef.current);
     };
   }, []);
 
@@ -185,11 +190,58 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
       clearInterval(revealTimerRef.current);
       revealTimerRef.current = null;
     }
+    if (predefinedTimerRef.current) {
+      clearTimeout(predefinedTimerRef.current);
+      predefinedTimerRef.current = null;
+    }
     setPendingSegments(null);
     setRevealedCount(0);
     setMessages([]);
     setInput("");
     setStreamingMessageId(null);
+  }
+
+  // Revelado escalonado compartido: muestra los segmentos de a uno cada
+  // 2 segundos y al final convierte el placeholder en mensajes reales
+  // (una burbuja por segmento). Lo usan las respuestas del modelo y las
+  // respuestas predefinidas hardcodeadas.
+  function startStaggeredReveal(
+    placeholder: ChatMessage,
+    finalSegments: string[],
+  ) {
+    setPendingSegments(finalSegments);
+    setRevealedCount(1);
+
+    let revealed = 1;
+    revealTimerRef.current = setInterval(() => {
+      revealed += 1;
+      setRevealedCount(revealed);
+
+      if (revealed >= finalSegments.length) {
+        if (revealTimerRef.current) {
+          clearInterval(revealTimerRef.current);
+          revealTimerRef.current = null;
+        }
+
+        // Una vez revelados todos, el placeholder se convierte en mensajes
+        // reales (una burbuja por segmento).
+        setMessages((prev) =>
+          prev.flatMap((msg) => {
+            if (msg.id !== placeholder.id) return [msg];
+            return finalSegments.map((content, i) => ({
+              id: i === 0 ? msg.id : crypto.randomUUID(),
+              role: "assistant" as const,
+              content,
+              timestamp: msg.timestamp,
+            }));
+          }),
+        );
+        setPendingSegments(null);
+        setRevealedCount(0);
+        setLoading(false);
+        setStreamingMessageId(null);
+      }
+    }, 2000);
   }
 
   function handlePredefinedQuestion(
@@ -204,32 +256,38 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
       timestamp: Date.now(),
     };
 
-    const assistantMsg: ChatMessage = {
+    setMessages((prev) => [...prev, userMsg]);
+
+    // El asistente "escribe" primero (puntitos) y después revela la
+    // respuesta hardcodeada con el mismo retraso que las respuestas del
+    // modelo.
+    const placeholder: ChatMessage = {
       id: crypto.randomUUID(),
       role: "assistant",
-      content: question.answer,
+      content: "",
       timestamp: Date.now(),
     };
 
-    // Las respuestas predefinidas son siempre en inglés, así que el mensaje
-    // de cierre también.
-    const closingMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content: "Can I help you with anything else?",
-      timestamp: Date.now(),
-    };
+    setMessages((prev) => [...prev, placeholder]);
+    setStreamingMessageId(placeholder.id);
+    setLoading(true);
 
-    setMessages((prev) => [...prev, userMsg, assistantMsg, closingMsg]);
+    predefinedTimerRef.current = setTimeout(() => {
+      // Las respuestas predefinidas son siempre en inglés, así que el
+      // mensaje de cierre también.
+      const segments = splitResponse(question.answer);
+      const finalSegments = [
+        ...segments,
+        "Can I help you with anything else?",
+      ];
+
+      startStaggeredReveal(placeholder, finalSegments);
+    }, 900);
   }
 
   // Turno del asistente: agrega el mensaje placeholder, streamea la respuesta
   // y al terminar la convierte en varios mensajes (una burbuja por segmento).
-  async function runAssistantTurn(
-    history: ChatMessage[],
-    language: ChatLanguage,
-    opts: { action?: string } = {},
-  ) {
+  async function runAssistantTurn(history: ChatMessage[]) {
     const placeholder: ChatMessage = {
       id: crypto.randomUUID(),
       role: "assistant",
@@ -252,8 +310,6 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
             role: m.role,
             content: m.content,
           })),
-          language,
-          ...(opts.action ? { action: opts.action } : {}),
         }),
       });
 
@@ -311,9 +367,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
               ? {
                   ...msg,
                   content:
-                    language === "es"
-                      ? "No recibí una respuesta válida. Intentá de nuevo."
-                      : "I didn't get a valid response. Please try again.",
+                    "I didn't get a valid response. Please try again.",
                 }
               : msg,
           ),
@@ -332,48 +386,9 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
 
       // Revelado escalonado: el primer mensaje aparece ya, los siguientes
       // cada 2 segundos (los puntitos de escritura se muestran entre medio).
-      setPendingSegments(finalSegments);
-      setRevealedCount(1);
-
-      let revealed = 1;
-      revealTimerRef.current = setInterval(() => {
-        revealed += 1;
-        setRevealedCount(revealed);
-
-        if (revealed >= finalSegments.length) {
-          if (revealTimerRef.current) {
-            clearInterval(revealTimerRef.current);
-            revealTimerRef.current = null;
-          }
-
-          // Una vez revelados todos, el placeholder se convierte en mensajes
-          // reales (una burbuja por segmento).
-          setMessages((prev) =>
-            prev.flatMap((msg) => {
-              if (msg.id !== placeholder.id) return [msg];
-              return finalSegments.map((content, i) => ({
-                id: i === 0 ? msg.id : crypto.randomUUID(),
-                role: "assistant" as const,
-                content,
-                timestamp: msg.timestamp,
-              }));
-            }),
-          );
-          setPendingSegments(null);
-          setRevealedCount(0);
-          setLoading(false);
-          setStreamingMessageId(null);
-        }
-      }, 2000);
+      startStaggeredReveal(placeholder, finalSegments);
     } catch (err) {
-      const fallback =
-        language === "es"
-          ? opts.action
-            ? "Lo siento, no pude procesar esta acción."
-            : "Lo siento, no pude procesar tu solicitud."
-          : opts.action
-            ? "Sorry, I couldn't process this action."
-            : "Sorry, I couldn't process your request.";
+      const fallback = "Sorry, I couldn't process your request.";
 
       const message =
         err instanceof Error && err.message.trim() !== ""
@@ -388,23 +403,6 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
       setLoading(false);
       setStreamingMessageId(null);
     }
-  }
-
-  async function handleAction(action: ChatbotAction) {
-    if (loading) return;
-
-    const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: action.label[language],
-      timestamp: Date.now(),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-
-    await runAssistantTurn([...messages, userMsg], language, {
-      action: action.id,
-    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -422,11 +420,10 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
-    await runAssistantTurn([...messages, userMsg], language);
+    await runAssistantTurn([...messages, userMsg]);
   }
 
-  const dialogTitle =
-    language === "es" ? "Asistente de PhysaFlow" : "PhysaFlow Assistant";
+  const dialogTitle = "PhysaFlow Assistant";
 
   return (
     <div
@@ -462,9 +459,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
 
             <div className="flex items-center gap-1.5">
               <span className="chat-pulse-dot h-1.5 w-1.5 rounded-full bg-green-400" />
-              <span className="text-[10px] text-white/70">
-                {language === "es" ? "En línea" : "Online"}
-              </span>
+              <span className="text-[10px] text-white/70">Online</span>
             </div>
           </div>
         </div>
@@ -475,12 +470,8 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
             onClick={handleClearChat}
             disabled={loading || messages.length === 0}
             className="rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label={
-              language === "es" ? "Limpiar chat" : "Clear chat"
-            }
-            title={
-              language === "es" ? "Limpiar chat" : "Clear chat"
-            }
+            aria-label="Clear chat"
+            title="Clear chat"
           >
             <Trash2 size={17} />
           </button>
@@ -488,9 +479,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
           <button
             type="button"
             onClick={onClose}
-            aria-label={
-              language === "es" ? "Cerrar chat" : "Close chat"
-            }
+            aria-label="Close chat"
             className="rounded-md p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
           >
             <X size={18} />
@@ -501,96 +490,73 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex h-80 min-w-0 flex-col gap-3 overflow-y-auto p-4 scroll-smooth [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin] md:h-96"
+        className="chat-backdrop flex h-80 min-w-0 flex-col gap-3 overflow-y-auto p-4 scroll-smooth [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin] md:h-96"
       >
         {messages.length === 0 && (
           <div className="space-y-4">
-            <div
-              className="chat-message-in flex items-center justify-between gap-3"
-              style={{ animationDelay: "0ms" }}
-            >
-              <span className="text-xs font-medium text-muted-foreground">
-                {language === "es" ? "Idioma" : "Language"}
-              </span>
-
-              <select
-                value={language}
-                onChange={(e) =>
-                  setLanguage(e.target.value as ChatLanguage)
-                }
-                className="rounded-md border bg-background px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-ring"
-                aria-label={
-                  language === "es"
-                    ? "Seleccionar idioma"
-                    : "Select language"
-                }
+            {welcomeStage === "typing" ? (
+              <div
+                className="chat-message-in flex min-w-0 items-start gap-3"
+                style={{ animationDelay: "0ms" }}
               >
-                <option value="es">🇪🇸 Español</option>
-                <option value="en">🇬🇧 English</option>
-              </select>
-            </div>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                  <Image
+                    src="/images/icon-notext.webp"
+                    alt="PhysaFlow"
+                    width={32}
+                    height={32}
+                    className="size-full object-cover"
+                  />
+                </div>
 
-            <div
-              className="chat-message-in space-y-2"
-              style={{ animationDelay: "80ms" }}
-            >
-              <p className="text-xs font-medium text-muted-foreground">
-                {language === "es"
-                  ? "Preguntas sugeridas"
-                  : "Suggested questions"}
-              </p>
+                <div className="flex min-w-0 max-w-[calc(100%-2.75rem)] flex-col gap-2">
+                  <TypingIndicator />
+                </div>
+              </div>
+            ) : (
+              <div
+                className="chat-message-in flex min-w-0 items-start gap-3"
+                style={{ animationDelay: "0ms" }}
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                  <Image
+                    src="/images/icon-notext.webp"
+                    alt="PhysaFlow"
+                    width={32}
+                    height={32}
+                    className="size-full object-cover"
+                  />
+                </div>
 
-              {questions.map((question) => (
-                <button
-                  key={question.id}
-                  type="button"
-                  onClick={() => handlePredefinedQuestion(question)}
-                  disabled={loading}
-                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-all duration-150 hover:border-accent/60 hover:bg-accent-soft hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {question.question}
-                </button>
-              ))}
-            </div>
+                <div className="flex min-w-0 max-w-[calc(100%-2.75rem)] flex-col gap-2">
+                  <div className="rounded-2xl rounded-bl-md bg-muted px-3 py-2 text-sm">
+                    <div className="whitespace-pre-wrap break-words">
+                      Hi there! I'm the PhysaFlow virtual assistant. I can
+                      help you explore the Stranded Capacity Index report,
+                      find information, and understand its main concepts.
+                      How can I help you?
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            <div
-              className="chat-message-in space-y-2 border-t pt-4"
-              style={{ animationDelay: "160ms" }}
-            >
-              <p className="text-xs font-medium text-muted-foreground">
-                {language === "es"
-                  ? "Explorar el reporte"
-                  : "Explore the report"}
-              </p>
-
-              {chatbotActions.map((action) => {
-                const Icon = getActionIcon(action.id);
-
-                return (
+            {welcomeStage === "questions" && (
+              <div className="flex flex-col items-end gap-2">
+                {questions.map((question, i) => (
                   <button
-                    key={action.id}
+                    key={question.id}
                     type="button"
-                    onClick={() => handleAction(action)}
+                    onClick={() => handlePredefinedQuestion(question)}
                     disabled={loading}
-                    className="w-full rounded-xl border border-border bg-card px-3 py-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-lift disabled:cursor-not-allowed disabled:opacity-50"
+                    className="chat-message-in w-full max-w-[85%] rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-all duration-150 hover:border-accent/60 hover:bg-accent-soft hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ animationDelay: `${i * 120}ms` }}
                   >
-                    <span className="flex items-center gap-2.5">
-                      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-deep">
-                        <Icon size={16} />
-                      </span>
-
-                      <span className="text-sm font-medium">
-                        {action.label[language].replace(/^\S+\s/, "")}
-                      </span>
-                    </span>
-
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      {action.description[language]}
-                    </span>
+                    {question.question}
                   </button>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -704,11 +670,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={
-            language === "es"
-              ? "Preguntá sobre el reporte…"
-              : "Ask about the report…"
-          }
+          placeholder="Ask about the report…"
           className="min-w-0 flex-1 rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:ring-2 focus:ring-accent/60"
         />
 
@@ -716,7 +678,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
           type="submit"
           disabled={loading}
           className="shrink-0 rounded-xl bg-[#0F2B20] p-2.5 text-white transition-all duration-150 hover:scale-105 hover:bg-[#1F4A35] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90"
-          aria-label={language === "es" ? "Enviar" : "Send"}
+          aria-label="Send"
         >
           <Send size={16} />
         </button>
