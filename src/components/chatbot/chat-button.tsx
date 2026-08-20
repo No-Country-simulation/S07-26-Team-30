@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import clsx from "clsx";
@@ -10,10 +10,17 @@ const CHAT_TIP_KEY = "physaflow:chat-tip-seen";
 
 export function ChatButton() {
   const [open, setOpen] = useState(false);
-  const [showTip, setShowTip] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !window.localStorage.getItem(CHAT_TIP_KEY);
-  });
+  // Arranca en false para que el render del servidor coincida con el del
+  // cliente (evita hydration mismatch); el estado real se lee del
+  // localStorage después del primer render.
+  const [showTip, setShowTip] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!window.localStorage.getItem(CHAT_TIP_KEY)) {
+      setShowTip(true);
+    }
+  }, []);
 
   function dismissTip() {
     window.localStorage.setItem(CHAT_TIP_KEY, "1");
@@ -30,22 +37,20 @@ export function ChatButton() {
       {showTip && !open && (
         <div
           role="tooltip"
-          className="chat-pop-in fixed bottom-24 right-6 z-50 flex max-w-[15rem] items-center gap-2 rounded-2xl border border-border bg-card px-3.5 py-2.5 shadow-lg"
+          className="chat-pop-in fixed bottom-24 right-6 z-50 flex max-w-[15rem] items-center gap-2 rounded-2xl border border-[#0F2B20]/10 bg-white px-3.5 py-2.5 text-[#0F2B20] shadow-lg"
         >
-          <p className="text-sm text-foreground">
-            Can I help you with anything?
-          </p>
+          <p className="text-sm">Can I help you with anything?</p>
 
           <button
             type="button"
             onClick={dismissTip}
             aria-label="Dismiss message"
-            className="cursor-pointer shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="cursor-pointer shrink-0 rounded-full p-0.5 text-[#0F2B20]/60 transition-colors hover:bg-[#0F2B20]/10 hover:text-[#0F2B20]"
           >
             <X size={14} />
           </button>
 
-          <span className="absolute -bottom-1 right-5 h-2 w-2 rotate-45 border-b border-r border-border bg-card" />
+          <span className="absolute -bottom-1 right-5 h-2 w-2 rotate-45 border-b border-r border-[#0F2B20]/10 bg-white" />
         </div>
       )}
 
