@@ -123,6 +123,9 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const revealTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const welcomeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const welcomeQuestionsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const predefinedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -136,21 +139,45 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
   }, [open]);
 
   // Secuencia de bienvenida: al abrir con el chat vacío, el asistente
-  // "escribe" (puntitos), luego envía el saludo y al final aparecen las
-  // preguntas sugeridas, una a una, como mensajes del usuario.
+  // "escribe" (puntitos), luego envía el saludo como un mensaje real (con
+  // hora) y al final aparecen las preguntas sugeridas, una a una, como
+  // mensajes del usuario.
   useEffect(() => {
-    if (!open || messages.length > 0) return;
+    if (!open) return;
+
+    // Si ya hay historial, la secuencia de bienvenida no aplica: se
+    // resetea el stage para que las preguntas sugeridas no reaparezcan.
+    if (messages.length > 0) {
+      setWelcomeStage("typing");
+      return;
+    }
 
     setWelcomeStage("typing");
-    const messageTimer = setTimeout(() => setWelcomeStage("message"), 900);
-    const questionsTimer = setTimeout(
+    welcomeTimerRef.current = setTimeout(() => {
+      setMessages([
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content:
+            "Hi there! I'm the PhysaFlow virtual assistant. I can help you explore the Stranded Capacity Index report, find information, and understand its main concepts. How can I help you?",
+          timestamp: Date.now(),
+        },
+      ]);
+      setWelcomeStage("message");
+    }, 900);
+    welcomeQuestionsTimerRef.current = setTimeout(
       () => setWelcomeStage("questions"),
       2100,
     );
 
     return () => {
-      clearTimeout(messageTimer);
-      clearTimeout(questionsTimer);
+      // Solo limpia los timers si el chat se cerró. Si el efecto re-corre
+      // porque messages.length cambió (el saludo se agregó), los timers de
+      // la secuencia deben seguir vivos.
+      if (!open) {
+        clearTimeout(welcomeTimerRef.current ?? undefined);
+        clearTimeout(welcomeQuestionsTimerRef.current ?? undefined);
+      }
     };
   }, [open, messages.length]);
 
@@ -167,11 +194,14 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
     welcomeStage,
   ]);
 
-  // Limpia el timer del revelado escalonado si el componente se desmonta.
+  // Limpia los timers de la secuencia de bienvenida, el revelado escalonado
+  // y las respuestas predefinidas si el componente se desmonta.
   useEffect(() => {
     return () => {
       if (revealTimerRef.current) clearInterval(revealTimerRef.current);
       if (welcomeTimerRef.current) clearTimeout(welcomeTimerRef.current);
+      if (welcomeQuestionsTimerRef.current)
+        clearTimeout(welcomeQuestionsTimerRef.current);
       if (predefinedTimerRef.current) clearTimeout(predefinedTimerRef.current);
     };
   }, []);
@@ -194,6 +224,15 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
       clearTimeout(predefinedTimerRef.current);
       predefinedTimerRef.current = null;
     }
+    if (welcomeTimerRef.current) {
+      clearTimeout(welcomeTimerRef.current);
+      welcomeTimerRef.current = null;
+    }
+    if (welcomeQuestionsTimerRef.current) {
+      clearTimeout(welcomeQuestionsTimerRef.current);
+      welcomeQuestionsTimerRef.current = null;
+    }
+    setWelcomeStage("typing");
     setPendingSegments(null);
     setRevealedCount(0);
     setMessages([]);
@@ -434,7 +473,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
       inert={!open}
       style={{ transformOrigin: "bottom right" }}
       className={clsx(
-        "fixed bottom-24 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl transition-all duration-200 ease-out sm:right-6 md:max-w-lg lg:max-w-xl",
+        "fixed bottom-24 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-xs flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl transition-all duration-200 ease-out sm:right-6 md:max-w-sm lg:max-w-md",
         open
           ? "opacity-100 scale-100 translate-y-0"
           : "pointer-events-none opacity-0 scale-95 translate-y-2",
@@ -492,68 +531,24 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
         onScroll={handleScroll}
         className="chat-backdrop flex h-80 min-w-0 flex-col gap-3 overflow-y-auto p-4 scroll-smooth [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin] md:h-96"
       >
-        {messages.length === 0 && (
-          <div className="space-y-4">
-            {welcomeStage === "typing" ? (
-              <div
-                className="chat-message-in flex min-w-0 items-start gap-3"
-                style={{ animationDelay: "0ms" }}
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
-                  <Image
-                    src="/images/icon-notext.webp"
-                    alt="PhysaFlow"
-                    width={32}
-                    height={32}
-                    className="size-full object-cover"
-                  />
-                </div>
+        {messages.length === 0 && welcomeStage === "typing" && (
+          <div
+            className="chat-message-in flex min-w-0 items-start gap-3"
+            style={{ animationDelay: "0ms" }}
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+              <Image
+                src="/images/icon-notext.webp"
+                alt="PhysaFlow"
+                width={32}
+                height={32}
+                className="size-full object-cover"
+              />
+            </div>
 
-                <div className="flex min-w-0 max-w-[calc(100%-2.75rem)] flex-col gap-2">
-                  <TypingIndicator />
-                </div>
-              </div>
-            ) : (
-              <div
-                className="chat-message-in flex min-w-0 items-start gap-3"
-                style={{ animationDelay: "0ms" }}
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
-                  <Image
-                    src="/images/icon-notext.webp"
-                    alt="PhysaFlow"
-                    width={32}
-                    height={32}
-                    className="size-full object-cover"
-                  />
-                </div>
-
-                <div className="flex min-w-0 max-w-[calc(100%-2.75rem)] flex-col gap-2">
-                  <div className="rounded-2xl rounded-bl-md bg-muted px-3 py-2 text-sm">
-                    <div className="whitespace-pre-wrap break-words">
-                      {"Hi there! I'm the PhysaFlow virtual assistant. I can help you explore the Stranded Capacity Index report, find information, and understand its main concepts. How can I help you?"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {welcomeStage === "questions" && (
-              <div className="flex flex-col items-end gap-2">
-                {questions.map((question, i) => (
-                  <button
-                    key={question.id}
-                    type="button"
-                    onClick={() => handlePredefinedQuestion(question)}
-                    disabled={loading}
-                    className="chat-message-in w-full max-w-[85%] rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-all duration-150 hover:border-accent/60 hover:bg-accent-soft hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ animationDelay: `${i * 120}ms` }}
-                  >
-                    {question.question}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="flex min-w-0 max-w-[calc(100%-2.75rem)] flex-col gap-2">
+              <TypingIndicator />
+            </div>
           </div>
         )}
 
@@ -606,8 +601,6 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
                   <TypingIndicator />
                 ) : (
                   segments.map((segment, i) => {
-                    const isLast = i === segments.length - 1;
-
                     return (
                       <div
                         key={i}
@@ -624,7 +617,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
                             : segment}
                         </div>
 
-                        {isLast && !isStreaming && (
+                        {(!isStreaming || pendingSegments !== null) && (
                           <div
                             className={clsx(
                               "mt-2 text-right text-xs",
@@ -655,6 +648,25 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
             </div>
           );
         })}
+
+        {welcomeStage === "questions" &&
+          messages.length === 1 &&
+          !messages.some((m) => m.role === "user") && (
+            <div className="flex flex-col items-end gap-2">
+              {questions.map((question, i) => (
+                <button
+                  key={question.id}
+                  type="button"
+                  onClick={() => handlePredefinedQuestion(question)}
+                  disabled={loading}
+                  className="chat-message-in w-full max-w-[85%] rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-all duration-150 hover:border-accent/60 hover:bg-accent-soft hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ animationDelay: `${i * 120}ms` }}
+                >
+                  {question.question}
+                </button>
+              ))}
+            </div>
+          )}
 
         <div ref={bottomRef} />
       </div>
