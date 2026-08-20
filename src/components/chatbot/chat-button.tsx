@@ -1,29 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import clsx from "clsx";
 import { ChatDialog } from "./chat-dialog";
 
-const CHAT_TIP_KEY = "physaflow:chat-tip-seen";
-
 export function ChatButton() {
   const [open, setOpen] = useState(false);
-  // Arranca en false para que el render del servidor coincida con el del
-  // cliente (evita hydration mismatch); el estado real se lee del
-  // localStorage después del primer render.
-  const [showTip, setShowTip] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!window.localStorage.getItem(CHAT_TIP_KEY)) {
-      setShowTip(true);
-    }
-  }, []);
+  // Aparece en cada carga del sitio; se oculta al abrir el chat o con la X.
+  // No se persiste: al refrescar (F5) vuelve a mostrarse.
+  const [showTip, setShowTip] = useState(true);
 
   function dismissTip() {
-    window.localStorage.setItem(CHAT_TIP_KEY, "1");
     setShowTip(false);
   }
 
