@@ -173,9 +173,9 @@ export function Header() {
             <p className="m-0 font-display text-sm font-semibold uppercase tracking-[0.35em] text-[#d4a94e]">
               PhysaFlow
             </p>
-            <h1 className="mt-2 mb-0 font-display text-4xl font-semibold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+            <h2 className="mt-2 mb-0 font-display text-4xl font-semibold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
               Stranded Capacity: The Hidden Constraint Behind AI Infrastructure
-            </h1>
+            </h2>
             <p className="mt-2 mb-0 font-display text-base font-medium text-white/70 sm:text-lg">
               August 20, 2026 | Report
             </p>

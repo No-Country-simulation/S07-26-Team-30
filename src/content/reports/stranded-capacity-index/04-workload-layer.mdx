@@ -1,8 +1,8 @@
-### 2.3. Layer 3: Workload & Orchestration
+## 2.3. Layer 3: Workload & Orchestration
 
 The Workload layer addresses orchestration, scheduling, and workload placement. Even with power, cooling, and hardware fully available, scheduling decisions — or their absence — can leave the most expensive compute hardware in the facility idle, waiting on synchronization, thermal awareness, or overly conservative reservations.
 
-#### 2.3.1. Non-Aware Thermal Scheduling (NATS)
+### 2.3.1. Non-Aware Thermal Scheduling (NATS)
 
 Planning of massive AI jobs without considering the thermal or energy state of the facility.
 
@@ -19,7 +19,7 @@ Planning of massive AI jobs without considering the thermal or energy state of t
 
 Schedulers select nodes from a free-list, ignoring thermal and power telemetry, so placement actively creates the constraints the facility then has to manage reactively.
 
-#### 2.3.2. Barrier Synchronization Idle (BSI)
+### 2.3.2. Barrier Synchronization Idle (BSI)
 
 Dead time for high-performance GPUs while waiting for synchronization with slower nodes.
 
@@ -36,7 +36,7 @@ Dead time for high-performance GPUs while waiting for synchronization with slowe
 
 Distributed training is only as fast as its slowest member; without topology-aware scheduling and co-design, stragglers force the entire cluster to wait.
 
-#### 2.3.3. Over-Provisioned Job Allocation (OPJA)
+### 2.3.3. Over-Provisioned Job Allocation (OPJA)
 
 Excessive resource reservation by developers to avoid out-of-memory (OOM) failures.
 

@@ -140,6 +140,11 @@ export default async function ReportPage({ params }: Props) {
       <ReportLayout nav={nav} slug={report}>
         <article id={sectionSlug}>
           <ReportJsonLd slug={slug} headline={headline} description={description} />
+          {/* Las secciones sin h1 propio (todo menos 01, que trae su # en el
+              MDX) reciben un h1 sr-only: una sola jerarquía por página. */}
+          {sectionSlug !== "01-executive-summary" && (
+            <h1 className="sr-only">{titleize(report)}</h1>
+          )}
           <Content />
         </article>
       </ReportLayout>
