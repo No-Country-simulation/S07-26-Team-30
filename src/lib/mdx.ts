@@ -15,17 +15,17 @@ const NAV: Record<string, NavItem[]> = {
         {
           label: "2.1. Facility Layer",
           slug: "02-facility-layer",
-          anchor: "2-1-layer-1-facility-power-thermal-infrastructure",
+          anchor: "2-1-facility-power-thermal-infrastructure",
         },
         {
           label: "2.2. IT Layer",
           slug: "03-it-layer",
-          anchor: "2-2-layer-2-it-hardware-infrastructure",
+          anchor: "2-2-it-hardware-infrastructure",
         },
         {
           label: "2.3. Workload Layer",
           slug: "04-workload-layer",
-          anchor: "2-3-layer-3-workload-orchestration",
+          anchor: "2-3-workload-orchestration",
         },
       ],
     },
