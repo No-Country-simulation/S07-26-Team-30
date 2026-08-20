@@ -531,10 +531,7 @@ export function ChatDialog({ open, onClose }: ChatDialogProps) {
                 <div className="flex min-w-0 max-w-[calc(100%-2.75rem)] flex-col gap-2">
                   <div className="rounded-2xl rounded-bl-md bg-muted px-3 py-2 text-sm">
                     <div className="whitespace-pre-wrap break-words">
-                      Hi there! I'm the PhysaFlow virtual assistant. I can
-                      help you explore the Stranded Capacity Index report,
-                      find information, and understand its main concepts.
-                      How can I help you?
+                      {"Hi there! I'm the PhysaFlow virtual assistant. I can help you explore the Stranded Capacity Index report, find information, and understand its main concepts. How can I help you?"}
                     </div>
                   </div>
                 </div>
