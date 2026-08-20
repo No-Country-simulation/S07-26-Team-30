@@ -153,7 +153,7 @@ export function Header() {
         >
           <Image
             src={hero}
-            alt="Hero"
+            alt="Stranded capacity in AI data centers — PhysaFlow research report"
             fill
             priority
             sizes="100vw"

@@ -423,7 +423,11 @@ export function Chart({
   };
 
   return (
-    <figure className={cn("my-12", className)}>
+    <figure
+      role="img"
+      aria-label={caption || title || "PhysaFlow report chart"}
+      className={cn("my-12", className)}
+    >
       {title && (
         <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
           {title}

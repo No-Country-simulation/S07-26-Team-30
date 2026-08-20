@@ -67,7 +67,6 @@ export function ChatButton() {
             "size-full object-cover transition-opacity duration-200",
             open && "opacity-0",
           )}
-          priority
         />
 
         <X
