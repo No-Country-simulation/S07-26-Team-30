@@ -132,6 +132,9 @@ export function ChatDialog({
   const predefinedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  // Distingue la re-apertura del chat (minimizar -> abrir) de la re-ejecución
+  // del efecto cuando el saludo se agrega a messages.
+  const prevOpenRef = useRef(false);
 
   const questions = predefinedQuestions;
 
@@ -146,19 +149,23 @@ export function ChatDialog({
   // hora) y al final aparecen las preguntas sugeridas, una a una, como
   // mensajes del usuario.
   useEffect(() => {
+    const wasOpen = prevOpenRef.current;
+    prevOpenRef.current = open;
     if (!open) return;
 
-    // Si ya hay historial, la secuencia de bienvenida no aplica: se
-    // resetea el stage para que las preguntas sugeridas no reaparezcan.
-    if (messages.length > 0) {
-      // El saludo sin interacción del usuario (chat minimizado y reabierto)
-      // mantiene las preguntas sugeridas; si el usuario ya participó, la
-      // secuencia de bienvenida terminó y no reaparecen.
+    // Re-apertura desde minimizado con historial: restaura el stage sin
+    // reiniciar la secuencia. Si el usuario ya participó, la bienvenida no
+    // reaparece; si solo está el saludo, las preguntas sugeridas vuelven.
+    if (!wasOpen && messages.length > 0) {
       setWelcomeStage(
         messages.some((m) => m.role === "user") ? "typing" : "questions",
       );
       return;
     }
+
+    // El saludo se agregó (messages.length cambió con el chat abierto):
+    // los timers de la secuencia siguen vivos, no tocar el stage.
+    if (messages.length > 0) return;
 
     setWelcomeStage("typing");
     welcomeTimerRef.current = setTimeout(() => {
