@@ -70,7 +70,7 @@ export class StaticSearchProvider implements ContextProvider {
       .filter((t) => t.length > 2 || /^[A-Z]{2,}$/.test(t))
       .map((t) => t.toLowerCase());
 
-    // BUG-AI-003 FIX: Diccionario ligero de equivalencias/sinónimos multilingüe
+    // Diccionario ligero de equivalencias/sinónimos multilingüe
     // para mapear términos en español al contenido en inglés del reporte.
     // Las claves son raíces/raíces flexivas ("resum" cubre resumen, resume,
     // resumir, resumí) para no depender de la forma exacta de la palabra.

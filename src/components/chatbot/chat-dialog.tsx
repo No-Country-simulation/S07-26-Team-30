@@ -77,7 +77,6 @@ function splitResponse(content: string): string[] {
   return segments;
 }
 
-// Componente simple para el indicador de escritura
 function TypingIndicator() {
   return (
     <div className="flex items-center space-x-1 self-start rounded-2xl rounded-bl-md border bg-muted px-3.5 py-3">
