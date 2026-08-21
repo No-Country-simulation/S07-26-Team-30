@@ -10,6 +10,10 @@
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js_15-000000?style=flat-square&logo=nextdotjs&logoColor=white">
 </picture>
 <picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB">
+  <img alt="React" src="https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB">
+</picture>
+<picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white">
 </picture>
@@ -18,27 +22,13 @@
   <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white">
 </picture>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/badge/MDX-1B1B1F?style=flat-square&logo=mdx&logoColor=white">
-  <img alt="MDX" src="https://img.shields.io/badge/MDX-1B1B1F?style=flat-square&logo=mdx&logoColor=white">
+  <source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/badge/MDX_3-1B1B1F?style=flat-square&logo=mdx&logoColor=white">
+  <img alt="MDX" src="https://img.shields.io/badge/MDX_3-1B1B1F?style=flat-square&logo=mdx&logoColor=white">
 </picture>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/badge/AI_SDK-000000?style=flat-square&logo=openai&logoColor=white">
-  <img alt="AI SDK" src="https://img.shields.io/badge/AI_SDK-000000?style=flat-square&logo=openai&logoColor=white">
+  <source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/badge/ECharts-AA344D?style=flat-square">
+  <img alt="ECharts" src="https://img.shields.io/badge/ECharts-AA344D?style=flat-square">
 </picture>
-
----
-
-## Tabla de contenidos
-
-- [Visión general](#visión-general)
-- [El reporte](#el-reporte)
-- [Stack técnico](#stack-técnico)
-- [Arquitectura](#arquitectura)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Equipo](#equipo)
-- [Roadmap del MVP](#roadmap-del-mvp)
-- [Primeros pasos](#primeros-pasos)
-- [Scripts disponibles](#scripts-disponibles)
 
 ---
 
@@ -50,79 +40,54 @@ Este repositorio contiene el sitio web del primer reporte público de PhysaFlow:
 
 > El sitio no es un blog ni una landing page. Es un documento de referencia que debe verse y sentirse como tal.
 
+**Demo en producción:** [physaflow-report.vercel.app](https://physaflow-report.vercel.app/)
+
 ---
 
-## El reporte
+## Características
 
-El reporte se estructura en torno a una **taxonomía nombrada** de las formas que toma la stranded capacity en tres capas de un data center:
-
-```
-┌─────────────────────────────────────┐
-│         WORKLOAD                    │
-│  (scheduling, pipelines, MUR)       │
-├─────────────────────────────────────┤
-│         IT                          │
-│  (GPU/CPU, networking, compute)      │
-├─────────────────────────────────────┤
-│         FACILITY                    │
-│  (power, cooling, floor space)       │
-└─────────────────────────────────────┘
-```
-
-Cada sección incluye descripciones en lenguaje de operador: **qué se ve, qué cuesta, por qué ocurre**. El sitio incluye además:
-
-- Metodología de cálculo del índice SCI
-- Gráficos y visualizaciones descargables
-- Bloque "cómo citar este reporte" en formato académico y periodístico
-- Chatbot contextual que responde preguntas exclusivamente sobre el contenido del reporte
-- Diseño responsivo con paleta forest-green y gold de PhysaFlow
+- **Experiencia de lectura académica**: 7 secciones MDX organizadas en una taxonomía nombrada de tres capas (Facility, IT, Workload), índice lateral navegable, barra de progreso de lectura y navegación entre secciones.
+- **Exportación a PDF**: descarga del reporte completo generada server-side con Playwright + Chromium, optimizada para entornos serverless (el PDF excluye navbar, hero y chatbot).
+- **Modo oscuro**: toggle en la barra del reporte con preferencia persistida en `localStorage`; los gráficos permanecen siempre en claro para preservar legibilidad.
+- **Chatbot contextual**: responde exclusivamente sobre el contenido del reporte mediante streaming (Vercel AI SDK + Groq). Búsqueda contextual por keywords sobre los MDX — sin embeddings ni base vectorial.
+- **Citas y compartir**: bloque "cómo citar este reporte" con formatos académico, periodístico y BibTeX, cada uno con botón de copiado; botón para compartir el reporte.
+- **Visualizaciones interactivas**: gráficos construidos con Apache ECharts.
+- **SEO técnico**: metadata canónica por sección, Open Graph/Twitter cards, imagen OG dinámica (`next/og`), JSON-LD schema `Report`, `sitemap.xml`, `robots.txt` y PWA manifest.
+- **Hero con parallax** respetando `prefers-reduced-motion`, diseño responsivo con la paleta forest-green y gold de PhysaFlow.
 
 ---
 
 ## Stack técnico
 
-| Tecnología | Versión | Propósito |
-|---|---|---|
-| [Next.js](https://nextjs.org/) | 15 (App Router) | Framework principal, rutas y server components |
-| [React](https://react.dev/) | 19 | UI declarativa |
-| [TypeScript](https://www.typescriptlang.org/) | 5.8 | Tipado estático |
-| [Tailwind CSS](https://tailwindcss.com/) | 4 | Estilos utilitarios |
-| [shadcn/ui](https://ui.shadcn.com/) | latest | Componentes de interfaz accesibles |
-| [MDX](https://mdxjs.com/) | 3 | Contenido del reporte como datos |
-| [AI SDK](https://sdk.vercel.ai/) | 7 | Chatbot con streaming de texto |
-| [ESLint](https://eslint.org/) | 9 | Calidad de código |
-| [Prettier](https://prettier.io/) | 3 | Formateo consistente |
+| Tecnología                                                                                                | Versión            | Propósito                                                  |
+| --------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------- |
+| [Next.js](https://nextjs.org/)                                                                            | ^15.5 (App Router) | Framework principal, rutas, server components y API routes |
+| [React](https://react.dev/)                                                                               | ^19.2              | UI declarativa                                             |
+| [TypeScript](https://www.typescriptlang.org/)                                                             | 5.8                | Tipado estático                                            |
+| [Tailwind CSS](https://tailwindcss.com/)                                                                  | ^4.3               | Estilos utilitarios (config vía CSS nativo)                |
+| [MDX](https://mdxjs.com/)                                                                                 | ^3.1               | Contenido del reporte como datos                           |
+| [AI SDK](https://ai-sdk.dev/)                                                                             | ^7.0               | Streaming del chatbot                                      |
+| [@ai-sdk/groq](https://sdk.vercel.ai/providers/ai-sdk-providers/groq)                                     | ^4.0               | Proveedor de LLM para el chatbot                           |
+| [Apache ECharts](https://echarts.apache.org/)                                                             | ^6.1               | Visualizaciones de datos                                   |
+| [playwright-core](https://playwright.dev/) + [@sparticuz/chromium](https://github.com/Sparticuz/chromium) | ^1.62 / ^149       | Generación de PDF serverless                               |
+
+Tooling: ESLint 9, Prettier 3, TypeScript `--noEmit`.
 
 ---
 
 ## Arquitectura
 
-El proyecto sigue una arquitectura **limpia y orientada al dominio** dentro de lo que un MVP de 5 semanas requiere — sin overengineering, pero con las abstracciones correctas en los puntos que van a evolucionar.
-
-```
-src/
-├── app/                    # Next.js App Router (rutas, layouts, API)
-│   ├── api/chat/           ← endpoint POST para el chatbot (AI SDK)
-│   └── reports/[...slug]/  ← catch-all para secciones anidadas
-├── components/             # UI atómica
-│   ├── chatbot/            ← floating button + dialog con streaming
-│   ├── layout/             ← header, footer
-│   └── report/             ← Figure, Blockquote, Definition, TOC
-├── content/reports/        # Los MDX son la fuente de verdad del reporte
-├── lib/                    # Lógica de dominio
-│   ├── context-provider.ts ← interfaz ContextProvider + StaticSearchProvider
-│   ├── mdx.ts              ← mapéo de módulos MDX + navegación
-│   └── search.ts           ← keyword search liviano
-└── types/                  # Tipos compartidos
-```
+El proyecto sigue una arquitectura **limpia y orientada al dominio** dentro de lo que un MVP requiere — sin overengineering, pero con las abstracciones correctas en los puntos que van a evolucionar.
 
 ### Decisiones clave
 
-**MDX como fuente de verdad**: cada sección del reporte es un archivo `.mdx` en `content/reports/`. Se renderizan con `@next/mdx` y se importan estáticamente para que webpack pueda compilarlas. No hay CMS, no hay base de datos.
+**MDX como fuente de verdad**: cada sección del reporte es un archivo `.mdx` en `src/content/reports/`. La navegación, el orden y la resolución de módulos viven en `src/lib/mdx.ts` (mapa estático `NAV` + imports lazy). No hay CMS ni base de datos.
 
-**Búsqueda por contexto sin embeddings**: en lugar de un RAG completo con vectores (innecesario para un solo reporte), el `StaticSearchProvider` carga los MDX desde disco, los divide por secciones y hace scoring por keywords — título pesa 5×, frecuencia en contenido suma. La interfaz `ContextProvider` permite migrar a Pinecone/pgvector cuando el contenido crezca sin tocar el resto del código.
+**Búsqueda contextual sin embeddings**: en lugar de un RAG completo con vectores (innecesario para un solo reporte), el `StaticSearchProvider` carga los MDX desde disco, los divide por secciones y hace scoring por keywords — el título pesa 5×. La interfaz `ContextProvider` permite migrar a Pinecone/pgvector cuando el contenido crezca sin tocar el resto del código.
 
-**Chatbot con contexto inyectado**: el API route recibe los mensajes, extrae el query, llama al provider, construye un system prompt con las secciones relevantes y streamea la respuesta con `streamText`. No hay estado de sesión, no hay base de datos vectorial — es deliberadamente simple para el MVP.
+**Chatbot con contexto inyectado**: el API route recibe los mensajes, consulta al provider, construye un system prompt con las secciones relevantes y streamea la respuesta con `streamText`. Sin estado de sesión, deliberadamente simple para el MVP.
+
+**PDF serverless**: la ruta `/api/reports/pdf` renderiza la página con `playwright-core` + un binario comprimido de Chromium (`@sparticuz/chromium`). Ambos paquetes están externalizados vía `serverExternalPackages` y su binario se incluye explícitamente con `outputFileTracingIncludes` para que sobreviva al tracing de serverless.
 
 ---
 
@@ -131,76 +96,44 @@ src/
 ```
 ├── src/
 │   ├── app/
-│   │   ├── api/chat/route.ts          ← AI SDK — streamText con contexto
-│   │   ├── reports/[...slug]/page.tsx ← renderiza la sección MDX correspondiente
-│   │   ├── layout.tsx                 ← layout raíz (Header, Footer, ChatButton)
-│   │   ├── page.tsx                   ← landing page
-│   │   └── globals.css                ← Tailwind v4 + tema forest-green/gold
+│   │   ├── api/
+│   │   │   ├── chat/route.ts           ← POST: chatbot con streaming (AI SDK + Groq)
+│   │   │   └── reports/pdf/route.ts    ← GET: export del reporte a PDF (Playwright)
+│   │   ├── reports/[...slug]/page.tsx  ← catch-all de secciones del reporte
+│   │   ├── report/page.tsx             ← redirect permanente a la portada del SCI
+│   │   ├── page.tsx                    ← landing con hero parallax
+│   │   ├── layout.tsx                  ← layout raíz (SEO global, Header, Footer, ChatButton)
+│   │   ├── globals.css                 ← Tailwind v4 + tema forest-green/gold + tokens dark
+│   │   ├── assets/report-img.webp      ← hero comprimido
+│   │   ├── opengraph-image.tsx         ← OG image dinámica (next/og)
+│   │   └── manifest.ts · robots.ts · sitemap.ts · not-found.tsx
 │   ├── components/
-│   │   ├── chatbot/                   ← ChatButton + ChatDialog (flotante)
-│   │   ├── layout/                    ← Header (sticky, backdrop-blur) + Footer
-│   │   └── report/                    ← Figure, Blockquote, Definition, TOC
+│   │   ├── chatbot/                    ← ChatButton + ChatDialog flotante con animaciones
+│   │   ├── layout/                     ← Header + Footer
+│   │   ├── report/                     ← Chart, CopyCode, Label, PdfDownloadButton,
+│   │   │                                 ReadingProgress, ReportIndex, ReportLayout, ShareButton
+│   │   └── theme/                      ← ThemeProvider + ThemeToggle (dark mode)
 │   ├── content/reports/
-│   │   └── stranded-capacity-index/   ← 7 secciones del reporte en MDX
-│   │       ├── introduction.mdx
-│   │       ├── methodology.mdx
-│   │       ├── taxonomy/
-│   │       │   ├── facility.mdx
-│   │       │   ├── it.mdx
-│   │       │   └── workload.mdx
-│   │       ├── citations.mdx
-│   │       └── conclusion.mdx
+│   │   └── stranded-capacity-index/    ← 7 secciones del reporte en MDX (fuente de verdad)
+│   │       ├── 01-executive-summary.mdx    (1. Introduction)
+│   │       ├── 02-facility-layer.mdx       (2. Taxonomy — 2.1 Facility Layer)
+│   │       ├── 03-it-layer.mdx             (2.2 IT Layer)
+│   │       ├── 04-workload-layer.mdx       (2.3 Workload Layer)
+│   │       ├── 05-methodology.mdx          (3. Methodology & Benchmarks)
+│   │       ├── 07-how-to-cite.mdx          (4. How to Cite)
+│   │       └── 08-references.mdx           (5. References)
 │   ├── lib/
-│   │   ├── context-provider.ts     ← interfaz + StaticSearchProvider
-│   │   ├── mdx.ts                  ← navegación + módulos MDX
-│   │   ├── prompts.ts              ← system prompt del chatbot
-│   │   ├── search.ts               ← keyword search utilitario
-│   │   └── utils.ts                ← cn(), slugify()
-│   ├── types/index.ts
-│   └── mdx-components.tsx          ← mapeo de componentes MDX custom
+│   │   ├── context-provider.ts         ← interfaz ContextProvider + StaticSearchProvider
+│   │   ├── mdx.ts                      ← navegación (NAV) + resolución de módulos MDX
+│   │   ├── predefined-questions.ts     ← preguntas sugeridas del chatbot
+│   │   ├── prompts.ts                  ← system prompt del chatbot
+│   │   └── utils.ts                    ← utilidades compartidas
+│   └── types/index.ts
 ├── .env.example                         ← variables de entorno
-├── next.config.mjs                      ← @next/mdx + pageExtensions
-├── tailwind.config.ts                   ← (Tailwind v4 usa CSS nativo)
+├── eslint.config.mjs
+├── next.config.mjs                      ← @next/mdx + Chromium externo para la ruta PDF
 └── tsconfig.json                        ← path alias @/ → src/
 ```
-
----
-
-## Equipo
-
-| Rol | Nombre | LinkedIn |
-|---|---|---|
-| **Frontend Developer** | Lautaro Frioni | — |
-| **Backend Developer** | Gabriel Braga | — |
-| **Full Stack Developer** | Hugo Ariel Seijo | — |
-| **Backend Developer** | Ivan Moreno Rivero | — |
-| **QA Engineer** | Héctor Iván Gamboa | — |
-
----
-
-## Roadmap del MVP (5 semanas)
-
-```
-Semana 1   ████████████░░░░░░░░  Scaffold + layout + ruta MDX
-Semana 2   ████████████████░░░░  Componentes de reporte + diseño responsivo
-Semana 3   ████████████████████  Contenido completo + visualizaciones
-Semana 4   ████████████████████  Chatbot + búsqueda contextual
-Semana 5   ████████████████████  QA, refinamiento, deploy
-```
-
-### Hitos
-
-- [x] Arquitectura inicial (Next.js 15, Tailwind v4, MDX, AI SDK)
-- [x] Layout base (header, footer, navegación, landing page)
-- [x] Ruta de reportes con catch-all para secciones anidadas
-- [x] Componentes de reporte (Figure, Blockquote, Definition, TOC)
-- [x] Chatbot con búsqueda por contexto (ContextProvider interface)
-- [x] Contenido placeholder en MDX (7 secciones)
-- [ ] Gráficos y visualizaciones descargables
-- [ ] Bloque "cómo citar este reporte"
-- [ ] Paleta forest-green y gold de PhysaFlow
-- [ ] QA y refinamiento visual
-- [ ] Deploy
 
 ---
 
@@ -216,26 +149,40 @@ npm install
 
 # 3. Configurar variables de entorno
 cp .env.example .env.local
-# Editar .env.local y agregar la API key del proveedor elegido
+# Editar .env.local con tu API key de Groq (https://console.groq.com)
 
 # 4. Iniciar el servidor de desarrollo
 npm run dev
 ```
 
-Abrir [http://localhost:3000](http://localhost:3000) y navegar a `/reports/stranded-capacity-index/introduction`.
+Abrir [http://localhost:3000](http://localhost:3000). El reporte vive en `/reports/stranded-capacity-index`.
 
 ---
 
 ## Scripts disponibles
 
-| Comando | Descripción |
-|---|---|
-| `npm run dev` | Servidor de desarrollo (Turbopack) |
-| `npm run build` | Build de producción |
-| `npm run start` | Servir el build de producción |
-| `npm run lint` | ESLint + Next.js lint |
-| `npm run typecheck` | TypeScript `--noEmit` |
-| `npm run format` | Formatear con Prettier |
+| Comando             | Descripción                   |
+| ------------------- | ----------------------------- |
+| `npm run dev`       | Servidor de desarrollo        |
+| `npm run build`     | Build de producción           |
+| `npm run start`     | Servir el build de producción |
+| `npm run lint`      | ESLint (config Next.js)       |
+| `npm run typecheck` | TypeScript `--noEmit`         |
+| `npm run format`    | Formatear con Prettier        |
+
+---
+
+## Equipo
+
+| Rol                      | Nombre             |
+| ------------------------ | ------------------ |
+| **Frontend Developer**   | Lautaro Frioni     |
+| **Backend Developer**    | Gabriel Braga      |
+| **Full Stack Developer** | Hugo Ariel Seijo   |
+| **Backend Developer**    | Ivan Moreno Rivero |
+| **QA Engineer**          | Héctor Iván Gamboa |
+
+Proyecto desarrollado como equipo 30 de la simulación laboral de [No-Country](https://no-country.org/) (S07-26).
 
 ---
 
